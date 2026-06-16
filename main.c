@@ -45,6 +45,36 @@ void bitmusterToString(char buffer[], int value) {
   buffer[8] = '\0';
 }
 
+// rtai helper functions
+inline void setRtaiBitmuster(int newValue) { outb(newValue, RTAI_ADDRESS); }
+
+void activate(int value) {
+  rt_sem_wait(&semRtaiBitmuster);
+
+  rtaiBitmuster = rtaiBitmuster | value;
+  setBitmuster(rtaiBitmuster);
+
+  rt_sem_signal(&semRtaiBitmuster);
+}
+
+void deactivate(int value) {
+  rt_sem_wait(&semRtaiBitmuster);
+
+  rtaiBitmuster = rtaiBitmuster & ~value;
+  setBitmuster(rtaiBitmuster);
+
+  rt_sem_signal(&semRtaiBitmuster);
+}
+
+void toggle(int value) {
+  rt_sem_wait(&semRtaiBitmuster);
+
+  rtaiBitmuster = rtaiBitmuster ^ value;
+  setBitmuster(rtaiBitmuster);
+
+  rt_sem_signal(&semRtaiBitmuster);
+}
+
 // test task
 RT_TASK rtTestTask;
 void testTask(long i) {
