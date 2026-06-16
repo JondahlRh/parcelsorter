@@ -29,6 +29,22 @@ SEM semParcelTrackingData;
 #define LIGHT_BARRIER_4 0x08
 #define LIGHT_BARRIER_5 0x10
 
+// general helper functions
+/**
+ * Convert a binary number to a string (for debugging purposes)
+ */
+void bitmusterToString(char buffer[], int value) {
+  for (int i = 0; i < 8; i++) {
+    if ((value >> i) & 1) {
+      buffer[7 - i] = '1';
+    } else {
+      buffer[7 - i] = '0';
+    }
+  }
+
+  buffer[8] = '\0';
+}
+
 // test task
 RT_TASK rtTestTask;
 void testTask(long i) {
