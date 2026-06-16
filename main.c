@@ -29,12 +29,46 @@ SEM semParcelTrackingData;
 #define LIGHT_BARRIER_4 0x08
 #define LIGHT_BARRIER_5 0x10
 
+// test task
+RT_TASK rtTestTask;
+void testTask(long i) {
+  while (1) {
+    rt_printk("test task running...");
+    rt_sleep(nano2count(1000 * 1000 * 1000));
+    rt_task_wait_period();
+  }
+}
+
 static __init int parallel_init(void) {
+  rt_mount();
+
+  rt_task_init(&rtTestTask, testTask, 0x00, 3000, 4, 0, 0);
+
+  rt_typed_sem_init(&semRtaiBitmuster, 1, RES_SEM);
+  rt_typed_sem_init(&semParcelTrackingData, 1, RES_SEM);
+
+  rt_set_periodic_mode();
+  start_rt_timer(0);
+
+  RTIME tstart = rt_get_time() + nano2count(10 * 1000 * 1000);
+  rt_task_make_periodic(&rtTestTask, tstart, nano2count(240000000));
+
   rt_printk("__ init __");
   return 0;
 }
 
-static __exit void parallel_exit(void) { rt_printk("__ exit __"); }
+static __exit void parallel_exit(void) {
+  stop_rt_timer();
+
+  rt_sem_delete(&semRtaiBitmuster);
+  rt_sem_delete(&semParcelTrackingData);
+
+  rt_task_delete(&rtTestTask);
+
+  rt_umount();
+
+  rt_printk("__ exit __");
+}
 
 module_init(parallel_init);
 module_exit(parallel_exit);
