@@ -149,21 +149,21 @@ void lightBarrierCheckTask(long i) {
     rt_printk("parcel tracking data:    %s", buffer);
 
     currentValue = getLightBarrier(LIGHT_BARRIER_1, newValue, oldValue);
-    if (value == 0) {
+    if (currentValue == 0) {
       // TODO: scanner
       addParcelToTracking(9);
 
       deactivate(BELT_1);
-    } else if (value == 1) {
+    } else if (currentValue == 1) {
       activate(BELT_1);
     }
 
     for (index = 0; index < 5; index++) {
       currentValue =
           getLightBarrier(lightBarrierBitToIndexMap[index], newValue, oldValue);
-      if (value == 0) {
+      if (currentValue == 0) {
         transferParcelTrackingRegion(index * 2 + 1);
-      } else if (value == 1) {
+      } else if (currentValue == 1) {
         transferParcelTrackingRegion(index * 2 + 2);
       }
 
