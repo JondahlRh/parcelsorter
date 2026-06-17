@@ -26,15 +26,16 @@ int parcelTrackingData[NUMBER_OF_REGIONS];
 SEM semParcelTrackingData;
 
 // light barrier definitions and variables
-int lightBarriersData = 0xff;
-SEM semLightBarriersData;
-
-#define NUMBER_OF_LIGHT_BARRIERS 5
 #define LIGHT_BARRIER_1 0x01
 #define LIGHT_BARRIER_2 0x40
 #define LIGHT_BARRIER_3 0x04
 #define LIGHT_BARRIER_4 0x08
 #define LIGHT_BARRIER_5 0x10
+
+int lightBarriersData = 0xff;
+SEM semLightBarriersData;
+
+#define NUMBER_OF_LIGHT_BARRIERS 5
 int lightBarriersIndexMap[NUMBER_OF_LIGHT_BARRIERS] = {
     LIGHT_BARRIER_2, LIGHT_BARRIER_3, LIGHT_BARRIER_4, LIGHT_BARRIER_5};
 
@@ -44,13 +45,8 @@ int lightBarriersIndexMap[NUMBER_OF_LIGHT_BARRIERS] = {
 void byteToString(char buffer[], int value) {
   int i;
   for (i = 0; i < 8; i++) {
-    if ((value >> i) & 1) {
-      buffer[7 - i] = '1';
-    } else {
-      buffer[7 - i] = '0';
-    }
+    buffer[7 - i] = ((value >> i) & 1) ? '1' : '0';
   }
-
   buffer[8] = '\0';
 }
 
@@ -67,7 +63,6 @@ void intArrayToString(char buffer[], int value[], int length) {
 
 // rtai helper functions
 inline void setRtaiBitmuster(int newValue) { outb(newValue, RTAI_ADDRESS); }
-inline int readRtaiBitmuster(void) { return inb(RTAI_ADDRESS); }
 
 void activate(int value) {
   rt_sem_wait(&semRtaiBitmuster);
@@ -112,6 +107,7 @@ int getLightBarrierValueIfChanged(int bit, int newData, int oldData) {
 
 /**
  * Add parcel at first position with the id of the exjection position
+ * @param parcel: id of the exjection position
  */
 void addParcelToTracking(int parcel) {
   rt_sem_wait(&semParcelTrackingData);
@@ -181,6 +177,7 @@ void lightBarrierTask(long i) {
 
     // if nothing has changed, wait and continue
     if (newValue == oldValue) {
+      // TODO: timings
       rt_sleep(nano2count(10 * 1000 * 1000));
       rt_task_wait_period();
       continue;
@@ -202,17 +199,15 @@ void lightBarrierTask(long i) {
     for (index = 0; index < NUMBER_OF_LIGHT_BARRIERS; index++) {
       currentValue = getLightBarrierValueIfChanged(lightBarriersIndexMap[index],
                                                    newValue, oldValue);
-      if (currentValue == 0) {
-        transferParcelTrackingRegion(index * 2);
-      } else if (currentValue == 1) {
-        transferParcelTrackingRegion(index * 2 + 1);
-      }
+      if (currentValue == -1) continue;
 
-      // update internal light barrier data
-      rt_sem_wait(&semLightBarriersData);
-      lightBarriersData = newValue;
-      rt_sem_signal(&semLightBarriersData);
+      transferParcelTrackingRegion(index * 2 + currentValue);
     }
+
+    // update internal light barrier data
+    rt_sem_wait(&semLightBarriersData);
+    lightBarriersData = newValue;
+    rt_sem_signal(&semLightBarriersData);
   }
 }
 
@@ -221,25 +216,25 @@ void lightBarrierTask(long i) {
 // if it matches the ejector id
 RT_TASK rtEjectionTask;
 void ejectionTask(long i) {
-  int index, parcelData, ejectorIdAsParcelTrackingIndex;
+  int index, parcelData;
 
   while (1) {
     // loop all ejectors and eject parcel data matches ejector id
     for (index = 0; index < NUMBER_OF_EJECTORS; index++) {
-      ejectorIdAsParcelTrackingIndex = (index + 1) * 2;
-      parcelData = getParcelTrackingDataAtIndex(ejectorIdAsParcelTrackingIndex);
-      if (parcelData == (index + 1)) {
-        rt_printk("ejection %d...", index + 1);
-        resetParcelTrackingDataAtIndex(ejectorIdAsParcelTrackingIndex);
+      parcelData = getParcelTrackingDataAtIndex((index + 1) * 2);
+      if (parcelData != (index + 1)) continue;
 
-        // TODO: calc delay for safe ejection
+      rt_printk("ejection %d...", index + 1);
+      resetParcelTrackingDataAtIndex((index + 1) * 2);
 
-        activate(ejectorsIndexMap[index]);
-        rt_busy_sleep(1000 * 1000);  // TODO: calc needed delay for exejction
-        deactivate(ejectorsIndexMap[index]);
-      }
+      // TODO: calc delay for safe ejection
+
+      activate(ejectorsIndexMap[index]);
+      rt_busy_sleep(1000 * 1000);  // TODO: calc needed delay for exejction
+      deactivate(ejectorsIndexMap[index]);
     }
 
+    // TODO: timings
     rt_sleep(nano2count(500 * 1000 * 1000));
     rt_task_wait_period();
   }
