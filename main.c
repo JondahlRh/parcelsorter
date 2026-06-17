@@ -89,7 +89,7 @@ void addParcelToTracking(int parcel) {
   rt_sem_signal(&semParcelTrackingData);
 }
 
-void removeParcelFromTracking() {
+void removeParcelFromTracking(void) {
   rt_sem_wait(&semParcelTrackingData);
   parcelTrackingData[NUMBER_OF_REGIONS - 1] = 0;
   rt_sem_signal(&semParcelTrackingData);
