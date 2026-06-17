@@ -17,6 +17,9 @@ SEM semRtaiBitmuster;
 #define EJECTOR_3 0x10
 #define BARCODE_SCANNER 0x80
 
+#define NUMBER_OF_EJECTORS 3
+int ejectorsIndexMap[NUMBER_OF_EJECTORS] = {EJECTOR_1, EJECTOR_2, EJECTOR_3};
+
 // parcel tracking definitions and variables
 #define NUMBER_OF_REGIONS 8
 int parcelTrackingData[NUMBER_OF_REGIONS];
@@ -26,13 +29,14 @@ SEM semParcelTrackingData;
 int lightBarriersData = 0xff;
 SEM semLightBarriersData;
 
+#define NUMBER_OF_LIGHT_BARRIERS 5
 #define LIGHT_BARRIER_1 0x01
 #define LIGHT_BARRIER_2 0x40
 #define LIGHT_BARRIER_3 0x04
 #define LIGHT_BARRIER_4 0x08
 #define LIGHT_BARRIER_5 0x10
-int lightBarriersIndexMap[5] = {LIGHT_BARRIER_2, LIGHT_BARRIER_3,
-                                LIGHT_BARRIER_4, LIGHT_BARRIER_5};
+int lightBarriersIndexMap[NUMBER_OF_LIGHT_BARRIERS] = {
+    LIGHT_BARRIER_2, LIGHT_BARRIER_3, LIGHT_BARRIER_4, LIGHT_BARRIER_5};
 
 /**
  * Convert a byte to a string (for debugging purposes)
@@ -95,12 +99,12 @@ void toggle(int value) {
 inline int readLightBarriers(void) { return inb(RTAI_ADDRESS + 4); }
 
 /**
- * Get the value of a light barrier at provided bit
+ * Get the value of a light barrier at provided bit if it has changed
  * - -1: has not change
  * - 0: changed and now active
  * - 1: changed and now inactive
  */
-int getLightBarrier(int bit, int newData, int oldData) {
+int getLightBarrierValueIfChanged(int bit, int newData, int oldData) {
   if ((newData & bit) == (oldData & bit)) return -1;
   return (newData & bit) ? 1 : 0;
 }
@@ -113,6 +117,16 @@ void addParcelToTracking(int parcel) {
   rt_sem_wait(&semParcelTrackingData);
   parcelTrackingData[0] = parcel;
   rt_sem_signal(&semParcelTrackingData);
+}
+
+/**
+ * Get parcel tracking data at provided index
+ */
+int getParcelTrackingDataAtIndex(int index) {
+  rt_sem_wait(&semParcelTrackingData);
+  int output = parcelTrackingData[index];
+  rt_sem_signal(&semParcelTrackingData);
+  return output;
 }
 
 /**
@@ -153,6 +167,7 @@ void lightBarrierTask(long i) {
     intArrayToString(buffer, parcelTrackingData, NUMBER_OF_REGIONS);
     rt_printk("parcel tracking data:    %s", buffer);
 
+    // if nothing has changed, wait and continue
     if (newValue == oldValue) {
       rt_sleep(nano2count(10 * 1000 * 1000));
       rt_task_wait_period();
@@ -160,7 +175,8 @@ void lightBarrierTask(long i) {
     }
 
     // check if light barrier 1 has changed
-    currentValue = getLightBarrier(LIGHT_BARRIER_1, newValue, oldValue);
+    currentValue =
+        getLightBarrierValueIfChanged(LIGHT_BARRIER_1, newValue, oldValue);
     if (currentValue == 0) {
       // TODO: scanner
       addParcelToTracking(9);
@@ -171,9 +187,9 @@ void lightBarrierTask(long i) {
     }
 
     // check if light barriers (after first) have changed
-    for (index = 0; index < 5; index++) {
-      currentValue =
-          getLightBarrier(lightBarriersIndexMap[index], newValue, oldValue);
+    for (index = 0; index < NUMBER_OF_LIGHT_BARRIERS; index++) {
+      currentValue = getLightBarrierValueIfChanged(lightBarriersIndexMap[index],
+                                                   newValue, oldValue);
       if (currentValue == 0) {
         transferParcelTrackingRegion(index * 2);
       } else if (currentValue == 1) {
@@ -190,9 +206,21 @@ void lightBarrierTask(long i) {
 
 RT_TASK rtEjectionTask;
 void ejectionTask(long i) {
+  int index, lightBarriersData, parcelData;
+
   while (1) {
-    // debugging
-    rt_printk("ejection task running...");
+    // get internal light barrier data
+    rt_sem_wait(&semLightBarriersData);
+    lightBarriersData = lightBarriersData;
+    rt_sem_signal(&semLightBarriersData);
+
+    // loop all ejectors and eject parcel data matches ejector id
+    for (index = 0; index < NUMBER_OF_EJECTORS; index++) {
+      parcelData = getParcelTrackingDataAtIndex((index + 1) * 2);
+      if (parcelData == (index + 1)) {
+        rt_printk("ejection %d...", index + 1);
+      }
+    }
 
     rt_sleep(nano2count(500 * 1000 * 1000));
     rt_task_wait_period();
