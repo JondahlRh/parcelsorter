@@ -173,7 +173,7 @@ static __exit void parallel_exit(void) {
 
   rt_sem_delete(&semRtaiBitmuster);
   rt_sem_delete(&semParcelTrackingData);
-  rt_sem_delete(&semLightBarrier);
+  rt_sem_delete(&semLightBarriersData);
 
   rt_task_delete(&rtLightBarrierCheckTask);
   rt_task_delete(&rtTestTask);
