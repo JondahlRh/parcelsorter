@@ -18,7 +18,7 @@ SEM semRtaiBitmuster;
 #define BARCODE_SCANNER 0x80
 
 // parcel tracking definitions and variables
-#define NUMBER_OF_REGIONS 7
+#define NUMBER_OF_REGIONS 8
 int parcelTrackingData[NUMBER_OF_REGIONS];
 SEM semParcelTrackingData;
 
@@ -89,15 +89,9 @@ void addParcelToTracking(int parcel) {
   rt_sem_signal(&semParcelTrackingData);
 }
 
-void initParcelTracking(void) {
+void resetParcelTracking(int index) {
   rt_sem_wait(&semParcelTrackingData);
-  parcelTrackingData[0] = 0;
-  rt_sem_signal(&semParcelTrackingData);
-}
-
-void removeParcelFromTracking(void) {
-  rt_sem_wait(&semParcelTrackingData);
-  parcelTrackingData[NUMBER_OF_REGIONS - 1] = 0;
+  parcelTrackingData[index] = 0;
   rt_sem_signal(&semParcelTrackingData);
 }
 
@@ -145,10 +139,11 @@ void lightBarrierCheckTask(long i) {
       // rt_printk("light barrier 1 changed");
 
       if (singleNewValue == 0) {
+        // TODO: scanner
         addParcelToTracking(9);
         deactivate(BELT_1);
       } else {
-        initParcelTracking();
+        resetParcelTracking(0);
       }
     }
 
@@ -161,6 +156,7 @@ void lightBarrierCheckTask(long i) {
         transferParcelTrackingRegion(0);
       } else {
         transferParcelTrackingRegion(1);
+        resetParcelTracking(1);
         activate(BELT_1);
       }
     }
@@ -174,6 +170,8 @@ void lightBarrierCheckTask(long i) {
         transferParcelTrackingRegion(2);
       } else {
         transferParcelTrackingRegion(3);
+        resetParcelTracking(2);
+        resetParcelTracking(3);
       }
     }
 
@@ -186,6 +184,8 @@ void lightBarrierCheckTask(long i) {
         transferParcelTrackingRegion(4);
       } else {
         transferParcelTrackingRegion(5);
+        resetParcelTracking(4);
+        resetParcelTracking(5);
       }
     }
 
@@ -197,7 +197,8 @@ void lightBarrierCheckTask(long i) {
       if (singleNewValue == 0) {
         transferParcelTrackingRegion(6);
       } else {
-        removeParcelFromTracking();
+        resetParcelTracking(6);
+        resetParcelTracking(7);
       }
     }
 
