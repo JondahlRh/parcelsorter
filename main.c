@@ -103,8 +103,9 @@ void lightBarrierCheckTask(long i) {
     newValue = readLightBarriers();
 
     bitmusterToString(buffer, newValue);
-    rt_printk("light barriers: %s", buffer);
-    rt_printk("light barriers: %s", lightBarriersData);
+    rt_printk("light barriers new: %s", buffer);
+    bitmusterToString(buffer, lightBarriersData);
+    rt_printk("light barriers internal: %s", buffer);
 
     rt_sem_wait(&semLightBarriersData);
 
