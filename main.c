@@ -162,9 +162,9 @@ void lightBarrierCheckTask(long i) {
       currentValue =
           getLightBarrier(lightBarrierBitToIndexMap[index], newValue, oldValue);
       if (currentValue == 0) {
-        transferParcelTrackingRegion(index * 2 + 1);
+        transferParcelTrackingRegion(index * 2);
       } else if (currentValue == 1) {
-        transferParcelTrackingRegion(index * 2 + 2);
+        transferParcelTrackingRegion(index * 2 + 1);
       }
 
       rt_sem_wait(&semLightBarriersData);
