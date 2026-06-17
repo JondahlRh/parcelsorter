@@ -18,7 +18,7 @@ SEM semRtaiBitmuster;
 #define BARCODE_SCANNER 0x80
 
 // parcel tracking definitions and variables
-#define NUMBER_OF_REGIONS 8
+#define NUMBER_OF_REGIONS 7
 int parcelTrackingData[NUMBER_OF_REGIONS];
 SEM semParcelTrackingData;
 
@@ -82,6 +82,26 @@ void toggle(int value) {
 // light barrier helper functions
 inline int readLightBarriers(void) { return inb(RTAI_ADDRESS + 4); }
 
+// parcel tracking helper functions
+void addParcelToTracking(int parcel) {
+  rt_sem_wait(&semParcelTrackingData);
+  parcelTrackingData[0] = parcel;
+  rt_sem_signal(&semParcelTrackingData);
+}
+
+void removeParcelFromTracking() {
+  rt_sem_wait(&semParcelTrackingData);
+  parcelTrackingData[NUMBER_OF_REGIONS - 1] = 0;
+  rt_sem_signal(&semParcelTrackingData);
+}
+
+void transferParcelTrackingRegion(int index) {
+  rt_sem_wait(&semParcelTrackingData);
+  parcelTrackingData[index + 1] = parcelTrackingData[index];
+  parcelTrackingData[index] = 0;
+  rt_sem_signal(&semParcelTrackingData);
+}
+
 // test task
 // RT_TASK rtTestTask;
 // void testTask(long i) {
@@ -107,6 +127,11 @@ void lightBarrierCheckTask(long i) {
     bitmusterToString(buffer, lightBarriersData);
     rt_printk("light barriers internal: %s", buffer);
 
+    rt_printk("parcel tracking data: %d%d%d%d%d%d%d", parcelTrackingData[0],
+              parcelTrackingData[1], parcelTrackingData[2],
+              parcelTrackingData[3], parcelTrackingData[4],
+              parcelTrackingData[5], parcelTrackingData[6]);
+
     rt_sem_wait(&semLightBarriersData);
 
     singleNewValue = newValue & LIGHT_BARRIER_1;
@@ -115,6 +140,7 @@ void lightBarrierCheckTask(long i) {
       // rt_printk("light barrier 1 changed");
 
       if (singleNewValue == 0) {
+        addParcelToTracking(9);
         deactivate(BELT_1);
       }
     }
@@ -124,7 +150,10 @@ void lightBarrierCheckTask(long i) {
     if (singleNewValue != singleOldValue) {
       // rt_printk("light barrier 2 changed %d", singleNewValue);
 
-      if (singleNewValue == LIGHT_BARRIER_2) {
+      if (singleNewValue == 0) {
+        transferParcelTrackingRegion(0);
+      } else {
+        transferParcelTrackingRegion(1);
         activate(BELT_1);
       }
     }
@@ -133,18 +162,36 @@ void lightBarrierCheckTask(long i) {
     singleOldValue = lightBarriersData & LIGHT_BARRIER_3;
     if (singleNewValue != singleOldValue) {
       // rt_printk("light barrier 3 changed");
+
+      if (singleNewValue == 0) {
+        transferParcelTrackingRegion(2);
+      } else {
+        transferParcelTrackingRegion(3);
+      }
     }
 
     singleNewValue = newValue & LIGHT_BARRIER_4;
     singleOldValue = lightBarriersData & LIGHT_BARRIER_4;
     if (singleNewValue != singleOldValue) {
       // rt_printk("light barrier 4 changed");
+
+      if (singleNewValue == 0) {
+        transferParcelTrackingRegion(4);
+      } else {
+        transferParcelTrackingRegion(5);
+      }
     }
 
     singleNewValue = newValue & LIGHT_BARRIER_5;
     singleOldValue = lightBarriersData & LIGHT_BARRIER_5;
     if (singleNewValue != singleOldValue) {
       // rt_printk("light barrier 5 changed");
+
+      if (singleNewValue == 0) {
+        transferParcelTrackingRegion(6);
+      } else {
+        removeParcelFromTracking();
+      }
     }
 
     lightBarriersData = newValue;
