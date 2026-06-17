@@ -34,7 +34,8 @@ SEM semParcelTrackingData;
  * Convert a binary number to a string (for debugging purposes)
  */
 void bitmusterToString(char buffer[], int value) {
-  for (int i = 0; i < 8; i++) {
+  int i;
+  for (i = 0; i < 8; i++) {
     if ((value >> i) & 1) {
       buffer[7 - i] = '1';
     } else {
