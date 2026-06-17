@@ -89,6 +89,12 @@ void addParcelToTracking(int parcel) {
   rt_sem_signal(&semParcelTrackingData);
 }
 
+void initParcelTracking(void) {
+  rt_sem_wait(&semParcelTrackingData);
+  parcelTrackingData[0] = 0;
+  rt_sem_signal(&semParcelTrackingData);
+}
+
 void removeParcelFromTracking(void) {
   rt_sem_wait(&semParcelTrackingData);
   parcelTrackingData[NUMBER_OF_REGIONS - 1] = 0;
@@ -98,7 +104,6 @@ void removeParcelFromTracking(void) {
 void transferParcelTrackingRegion(int index) {
   rt_sem_wait(&semParcelTrackingData);
   parcelTrackingData[index + 1] = parcelTrackingData[index];
-  parcelTrackingData[index] = 0;
   rt_sem_signal(&semParcelTrackingData);
 }
 
