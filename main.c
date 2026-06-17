@@ -77,7 +77,7 @@ void toggle(int value) {
 }
 
 // light barrier helper functions
-inline int readLightBarriers() { return inb(RTAI_ADDRESS + 4); }
+inline int readLightBarriers(void) { return inb(RTAI_ADDRESS + 4); }
 
 // test task
 RT_TASK rtTestTask;
