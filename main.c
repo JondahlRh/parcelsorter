@@ -93,13 +93,15 @@ RT_TASK rtLightBarrierCheckTask;
 void lightBarrierCheckTask(long i) {
   char buffer[9];
 
+  activate(BELT_1 + BELT_2);
+
   while (1) {
     int newValue = readLightBarriers();
 
     bitmusterToString(buffer, newValue);
     rt_printk("light barriers: %s", buffer);
 
-    rt_sleep(nano2count(1000 * 1000 * 1000));
+    rt_sleep(nano2count(10 * 1000 * 1000));
     rt_task_wait_period();
   }
 }
