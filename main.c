@@ -24,7 +24,7 @@ SEM semParcelTrackingData;
 
 // light barrier definitions and variables
 #define NUMBER_OF_LIGHT_BARRIERS 5
-int lightBarriersData[NUMBER_OF_LIGHT_BARRIERS];
+int lightBarriersData[NUMBER_OF_LIGHT_BARRIERS] = {1, 1, 1, 1, 1};
 SEM semLightBarriersData;
 
 #define LIGHT_BARRIER_1 0x01
