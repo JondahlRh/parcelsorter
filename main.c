@@ -76,6 +76,9 @@ void toggle(int value) {
   rt_sem_signal(&semRtaiBitmuster);
 }
 
+// light barrier helper functions
+inline int readLightBarriers() { return inb(RTAI_ADDRESS + 4); }
+
 // test task
 RT_TASK rtTestTask;
 void testTask(long i) {
@@ -86,9 +89,26 @@ void testTask(long i) {
   }
 }
 
+RT_TASK rtLightBarrierCheckTask;
+void lightBarrierCheckTask(long i) {
+  char buffer[9];
+
+  while (1) {
+    int newValue = readLightBarriers();
+
+    bitmusterToString(buffer, newValue);
+    rt_printk("light barriers: %s", buffer);
+
+    rt_sleep(nano2count(1000 * 1000 * 1000));
+    rt_task_wait_period();
+  }
+}
+
 static __init int parallel_init(void) {
   rt_mount();
 
+  rt_task_init(&rtLightBarrierCheckTask, lightBarrierCheckTask, 0x00, 3000, 4,
+               0, 0);
   rt_task_init(&rtTestTask, testTask, 0x00, 3000, 4, 0, 0);
 
   rt_typed_sem_init(&semRtaiBitmuster, 1, RES_SEM);
@@ -98,6 +118,8 @@ static __init int parallel_init(void) {
   start_rt_timer(0);
 
   RTIME tstart = rt_get_time() + nano2count(10 * 1000 * 1000);
+  rt_task_make_periodic(&rtLightBarrierCheckTask, tstart,
+                        nano2count(240000000));
   rt_task_make_periodic(&rtTestTask, tstart, nano2count(240000000));
 
   rt_printk("__ init __");
@@ -110,6 +132,7 @@ static __exit void parallel_exit(void) {
   rt_sem_delete(&semRtaiBitmuster);
   rt_sem_delete(&semParcelTrackingData);
 
+  rt_task_delete(&rtLightBarrierCheckTask);
   rt_task_delete(&rtTestTask);
 
   rt_umount();
