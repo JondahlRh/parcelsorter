@@ -23,6 +23,10 @@ int parcelTrackingData[NUMBER_OF_REGIONS];
 SEM semParcelTrackingData;
 
 // light barrier definitions and variables
+#define NUMBER_OF_LIGHT_BARRIERS 5
+int lightBarriersData[NUMBER_OF_LIGHT_BARRIERS];
+SEM semLightBarriersData;
+
 #define LIGHT_BARRIER_1 0x01
 #define LIGHT_BARRIER_2 0x40
 #define LIGHT_BARRIER_3 0x04
@@ -98,8 +102,41 @@ void lightBarrierCheckTask(long i) {
   while (1) {
     int newValue = readLightBarriers();
 
-    bitmusterToString(buffer, newValue);
-    rt_printk("light barriers: %s", buffer);
+    // bitmusterToString(buffer, newValue);
+    // rt_printk("light barriers: %s", buffer);
+
+    rt_sem_wait(&semLightBarriersData);
+
+    int newValueLightBarrier1 = newValue & LIGHT_BARRIER_1;
+    if (newValueLightBarrier1 != lightBarriersData[0]) {
+      rt_printk("light barrier 1 changed");
+      lightBarriersData[0] = newValueLightBarrier1;
+    }
+    int newValueLightBarrier2 = newValue & LIGHT_BARRIER_2;
+    if (newValueLightBarrier2 != lightBarriersData[1]) {
+      rt_printk("light barrier 2 changed");
+      lightBarriersData[1] = newValueLightBarrier2;
+    }
+
+    int newValueLightBarrier3 = newValue & LIGHT_BARRIER_3;
+    if (newValueLightBarrier3 != lightBarriersData[2]) {
+      rt_printk("light barrier 3 changed");
+      lightBarriersData[2] = newValueLightBarrier3;
+    }
+
+    int newValueLightBarrier4 = newValue & LIGHT_BARRIER_4;
+    if (newValueLightBarrier4 != lightBarriersData[3]) {
+      rt_printk("light barrier 4 changed");
+      lightBarriersData[3] = newValueLightBarrier4;
+    }
+
+    int newValueLightBarrier5 = newValue & LIGHT_BARRIER_5;
+    if (newValueLightBarrier5 != lightBarriersData[4]) {
+      rt_printk("light barrier 5 changed");
+      lightBarriersData[4] = newValueLightBarrier5;
+    }
+
+    rt_sem_signal(&semLightBarriersData);
 
     rt_sleep(nano2count(10 * 1000 * 1000));
     rt_task_wait_period();
@@ -115,6 +152,7 @@ static __init int parallel_init(void) {
 
   rt_typed_sem_init(&semRtaiBitmuster, 1, RES_SEM);
   rt_typed_sem_init(&semParcelTrackingData, 1, RES_SEM);
+  rt_typed_sem_init(&semLightBarriersData, 1, RES_SEM);
 
   rt_set_periodic_mode();
   start_rt_timer(0);
@@ -135,6 +173,7 @@ static __exit void parallel_exit(void) {
 
   rt_sem_delete(&semRtaiBitmuster);
   rt_sem_delete(&semParcelTrackingData);
+  rt_sem_delete(&semLightBarrier);
 
   rt_task_delete(&rtLightBarrierCheckTask);
   rt_task_delete(&rtTestTask);
