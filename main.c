@@ -147,6 +147,8 @@ void lightBarrierCheckTask(long i) {
       if (singleNewValue == 0) {
         addParcelToTracking(9);
         deactivate(BELT_1);
+      } else {
+        initParcelTracking();
       }
     }
 
