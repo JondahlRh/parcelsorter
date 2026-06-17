@@ -234,8 +234,10 @@ void ejectionTask(long i) {
         rt_printk("ejection %d...", index + 1);
         resetParcelTrackingDataAtIndex(ejectorIdAsParcelTrackingIndex);
 
+        // TODO: calc delay for safe ejection
+
         activate(ejectorsIndexMap[index]);
-        rt_busy_sleep(nano2count(1000 * 1000));
+        rt_busy_sleep(1000 * 1000); // TODO: calc needed delay for exejction
         deactivate(ejectorsIndexMap[index]);
       }
     }
@@ -248,6 +250,7 @@ void ejectionTask(long i) {
 static __init int parallel_init(void) {
   rt_mount();
 
+  // TODO: priorities
   rt_task_init(&rtLightBarrierTask, lightBarrierTask, 0x00, 3000, 4, 0, 0);
   rt_task_init(&rtEjectionTask, ejectionTask, 0x00, 3000, 4, 0, 0);
 
@@ -258,6 +261,8 @@ static __init int parallel_init(void) {
   rt_set_periodic_mode();
   start_rt_timer(0);
 
+
+  // TODO: timings
   RTIME tstart1, tstart2;
   tstart1 = rt_get_time() + nano2count(1000 * 1000);
   tstart2 = rt_get_time() + nano2count(100 * 1000 * 1000);
