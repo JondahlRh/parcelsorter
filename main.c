@@ -193,7 +193,7 @@ static __init int parallel_init(void) {
 
   RTIME tstart = rt_get_time() + nano2count(10 * 1000 * 1000);
   rt_task_make_periodic(&rtLightBarrierCheckTask, tstart,
-                        nano2count(240000000));
+                        nano2count(120000000));
   // rt_task_make_periodic(&rtTestTask, tstart, nano2count(240000000));
 
   rt_printk("__ init __");
