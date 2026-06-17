@@ -103,7 +103,7 @@ void lightBarrierCheckTask(long i) {
     newValue = readLightBarriers();
 
     bitmusterToString(buffer, newValue);
-    rt_printk("light barriers new: %s", buffer);
+    rt_printk("light barriers new:      %s", buffer);
     bitmusterToString(buffer, lightBarriersData);
     rt_printk("light barriers internal: %s", buffer);
 
@@ -111,23 +111,34 @@ void lightBarrierCheckTask(long i) {
 
     singleNewValue = newValue & LIGHT_BARRIER_1;
     singleOldValue = lightBarriersData & LIGHT_BARRIER_1;
-    if (singleNewValue != singleOldValue) rt_printk("light barrier 1 changed");
+    if (singleNewValue != singleOldValue) {
+      // rt_printk("light barrier 1 changed");
+      deactivate(BELT_1);
+    }
 
     singleNewValue = newValue & LIGHT_BARRIER_2;
     singleOldValue = lightBarriersData & LIGHT_BARRIER_2;
-    if (singleNewValue != singleOldValue) rt_printk("light barrier 2 changed");
+    if (singleNewValue != singleOldValue) {
+      // rt_printk("light barrier 2 changed");
+    }
 
     singleNewValue = newValue & LIGHT_BARRIER_3;
     singleOldValue = lightBarriersData & LIGHT_BARRIER_3;
-    if (singleNewValue != singleOldValue) rt_printk("light barrier 3 changed");
+    if (singleNewValue != singleOldValue) {
+      // rt_printk("light barrier 3 changed");
+    }
 
     singleNewValue = newValue & LIGHT_BARRIER_4;
     singleOldValue = lightBarriersData & LIGHT_BARRIER_4;
-    if (singleNewValue != singleOldValue) rt_printk("light barrier 4 changed");
+    if (singleNewValue != singleOldValue) {
+      // rt_printk("light barrier 4 changed");
+    }
 
     singleNewValue = newValue & LIGHT_BARRIER_5;
     singleOldValue = lightBarriersData & LIGHT_BARRIER_5;
-    if (singleNewValue != singleOldValue) rt_printk("light barrier 5 changed");
+    if (singleNewValue != singleOldValue) {
+      // rt_printk("light barrier 5 changed");
+    }
 
     lightBarriersData = newValue;
 
