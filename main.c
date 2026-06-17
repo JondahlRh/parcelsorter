@@ -67,6 +67,7 @@ void intArrayToString(char buffer[], int value[], int length) {
 
 // rtai helper functions
 inline void setRtaiBitmuster(int newValue) { outb(newValue, RTAI_ADDRESS); }
+inline int readRtaiBitmuster(void) { return inb(RTAI_ADDRESS); }
 
 void activate(int value) {
   rt_sem_wait(&semRtaiBitmuster);
@@ -109,7 +110,6 @@ int getLightBarrierValueIfChanged(int bit, int newData, int oldData) {
   return (newData & bit) ? 1 : 0;
 }
 
-// parcel tracking helper functions
 /**
  * Add parcel at first position with the id of the exjection position
  */
@@ -216,16 +216,14 @@ void lightBarrierTask(long i) {
   }
 }
 
+// ejection task:
+// for each ejector, get parcel tracking data at corresponding index and check
+// if it matches the ejector id
 RT_TASK rtEjectionTask;
 void ejectionTask(long i) {
-  int index, lightBarriersData, parcelData, ejectorIdAsParcelTrackingIndex;
+  int index, parcelData, ejectorIdAsParcelTrackingIndex;
 
   while (1) {
-    // get internal light barrier data
-    rt_sem_wait(&semLightBarriersData);
-    lightBarriersData = lightBarriersData;
-    rt_sem_signal(&semLightBarriersData);
-
     // loop all ejectors and eject parcel data matches ejector id
     for (index = 0; index < NUMBER_OF_EJECTORS; index++) {
       ejectorIdAsParcelTrackingIndex = (index + 1) * 2;
@@ -237,7 +235,7 @@ void ejectionTask(long i) {
         // TODO: calc delay for safe ejection
 
         activate(ejectorsIndexMap[index]);
-        rt_busy_sleep(1000 * 1000); // TODO: calc needed delay for exejction
+        rt_busy_sleep(1000 * 1000);  // TODO: calc needed delay for exejction
         deactivate(ejectorsIndexMap[index]);
       }
     }
@@ -260,7 +258,6 @@ static __init int parallel_init(void) {
 
   rt_set_periodic_mode();
   start_rt_timer(0);
-
 
   // TODO: timings
   RTIME tstart1, tstart2;
