@@ -127,7 +127,7 @@ void lightBarrierCheckTask(long i) {
     bitmusterToString(buffer, lightBarriersData);
     rt_printk("light barriers internal: %s", buffer);
 
-    rt_printk("parcel tracking data: %d%d%d%d%d%d%d", parcelTrackingData[0],
+    rt_printk("parcel tracking data:    %d%d%d%d%d%d%d", parcelTrackingData[0],
               parcelTrackingData[1], parcelTrackingData[2],
               parcelTrackingData[3], parcelTrackingData[4],
               parcelTrackingData[5], parcelTrackingData[6]);
