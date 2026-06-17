@@ -36,7 +36,7 @@ SEM semLightBarriersData;
 /**
  * Convert a binary number to a string (for debugging purposes)
  */
-void bitmusterToString(char buffer[], int value) {
+void byteToString(char buffer[], int value) {
   int i;
   for (i = 0; i < 8; i++) {
     if ((value >> i) & 1) {
@@ -47,6 +47,14 @@ void bitmusterToString(char buffer[], int value) {
   }
 
   buffer[8] = '\0';
+}
+
+void intArrayToString(char buffer[], int value[], int length) {
+  int i;
+  for (i = 0; i < length; i++) {
+    buffer[i] = value[i] + '0';
+  }
+  buffer[length] = '\0';
 }
 
 // rtai helper functions
@@ -82,6 +90,14 @@ void toggle(int value) {
 // light barrier helper functions
 inline int readLightBarriers(void) { return inb(RTAI_ADDRESS + 4); }
 
+/**
+ * Get the value of a light barrier at provided bit if it has changed
+ */
+int getLightBarrier(int bit, int newData, int oldData) {
+  if ((newData & bit) == (oldData & bit)) return -1;
+  return (newData & bit) ? 1 : 0;
+}
+
 // parcel tracking helper functions
 void addParcelToTracking(int parcel) {
   rt_sem_wait(&semParcelTrackingData);
@@ -89,15 +105,12 @@ void addParcelToTracking(int parcel) {
   rt_sem_signal(&semParcelTrackingData);
 }
 
-void resetParcelTracking(int index) {
-  rt_sem_wait(&semParcelTrackingData);
-  parcelTrackingData[index] = 0;
-  rt_sem_signal(&semParcelTrackingData);
-}
-
 void transferParcelTrackingRegion(int index) {
   rt_sem_wait(&semParcelTrackingData);
-  parcelTrackingData[index + 1] = parcelTrackingData[index];
+  parcelTrackingData[index] = 0;
+  if ((index + 1) < NUMBER_OF_REGIONS) {
+    parcelTrackingData[index + 1] = parcelTrackingData[index];
+  }
   rt_sem_signal(&semParcelTrackingData);
 }
 
@@ -111,9 +124,12 @@ void transferParcelTrackingRegion(int index) {
 //   }
 // }
 
+int lightBarrierBitToIndexMap[5] = {LIGHT_BARRIER_2, LIGHT_BARRIER_3,
+                                    LIGHT_BARRIER_4, LIGHT_BARRIER_5};
+
 RT_TASK rtLightBarrierCheckTask;
 void lightBarrierCheckTask(long i) {
-  int newValue, singleNewValue, singleOldValue;
+  int newValue, oldValue, currentValue, index;
   char buffer[9];
 
   activate(BELT_1 + BELT_2);
@@ -121,93 +137,43 @@ void lightBarrierCheckTask(long i) {
   while (1) {
     newValue = readLightBarriers();
 
-    bitmusterToString(buffer, newValue);
-    rt_printk("light barriers new:      %s", buffer);
-    bitmusterToString(buffer, lightBarriersData);
-    rt_printk("light barriers internal: %s", buffer);
-
-    rt_printk("parcel tracking data:    %d%d%d%d%d%d%d", parcelTrackingData[0],
-              parcelTrackingData[1], parcelTrackingData[2],
-              parcelTrackingData[3], parcelTrackingData[4],
-              parcelTrackingData[5], parcelTrackingData[6]);
-
     rt_sem_wait(&semLightBarriersData);
-
-    singleNewValue = newValue & LIGHT_BARRIER_1;
-    singleOldValue = lightBarriersData & LIGHT_BARRIER_1;
-    if (singleNewValue != singleOldValue) {
-      // rt_printk("light barrier 1 changed");
-
-      if (singleNewValue == 0) {
-        // TODO: scanner
-        addParcelToTracking(9);
-        deactivate(BELT_1);
-      } else {
-        resetParcelTracking(0);
-      }
-    }
-
-    singleNewValue = newValue & LIGHT_BARRIER_2;
-    singleOldValue = lightBarriersData & LIGHT_BARRIER_2;
-    if (singleNewValue != singleOldValue) {
-      // rt_printk("light barrier 2 changed %d", singleNewValue);
-
-      if (singleNewValue == 0) {
-        transferParcelTrackingRegion(0);
-      } else {
-        transferParcelTrackingRegion(1);
-        resetParcelTracking(1);
-        activate(BELT_1);
-      }
-    }
-
-    singleNewValue = newValue & LIGHT_BARRIER_3;
-    singleOldValue = lightBarriersData & LIGHT_BARRIER_3;
-    if (singleNewValue != singleOldValue) {
-      // rt_printk("light barrier 3 changed");
-
-      if (singleNewValue == 0) {
-        transferParcelTrackingRegion(2);
-      } else {
-        transferParcelTrackingRegion(3);
-        resetParcelTracking(2);
-        resetParcelTracking(3);
-      }
-    }
-
-    singleNewValue = newValue & LIGHT_BARRIER_4;
-    singleOldValue = lightBarriersData & LIGHT_BARRIER_4;
-    if (singleNewValue != singleOldValue) {
-      // rt_printk("light barrier 4 changed");
-
-      if (singleNewValue == 0) {
-        transferParcelTrackingRegion(4);
-      } else {
-        transferParcelTrackingRegion(5);
-        resetParcelTracking(4);
-        resetParcelTracking(5);
-      }
-    }
-
-    singleNewValue = newValue & LIGHT_BARRIER_5;
-    singleOldValue = lightBarriersData & LIGHT_BARRIER_5;
-    if (singleNewValue != singleOldValue) {
-      // rt_printk("light barrier 5 changed");
-
-      if (singleNewValue == 0) {
-        transferParcelTrackingRegion(6);
-      } else {
-        resetParcelTracking(6);
-        resetParcelTracking(7);
-      }
-    }
-
-    lightBarriersData = newValue;
-
+    oldValue = lightBarriersData;
     rt_sem_signal(&semLightBarriersData);
 
-    rt_sleep(nano2count(10 * 1000 * 1000));
-    rt_task_wait_period();
+    byteToString(buffer, newValue);
+    rt_printk("light barriers new:      %s", buffer);
+    byteToString(buffer, lightBarriersData);
+    rt_printk("light barriers internal: %s", buffer);
+    intArrayToString(buffer, parcelTrackingData, NUMBER_OF_REGIONS);
+    rt_printk("parcel tracking data:    %s", buffer);
+
+    currentValue = getLightBarrier(LIGHT_BARRIER_1, newValue, oldValue);
+    if (value == 0) {
+      // TODO: scanner
+      addParcelToTracking(9);
+
+      deactivate(BELT_1);
+    } else if (value == 1) {
+      activate(BELT_1);
+    }
+
+    for (index = 0; index < 5; index++) {
+      currentValue =
+          getLightBarrier(lightBarrierBitToIndexMap[index], newValue, oldValue);
+      if (value == 0) {
+        transferParcelTrackingRegion(index * 2 + 1);
+      } else if (value == 1) {
+        transferParcelTrackingRegion(index * 2 + 2);
+      }
+
+      rt_sem_wait(&semLightBarriersData);
+      lightBarriersData = newValue;
+      rt_sem_signal(&semLightBarriersData);
+
+      rt_sleep(nano2count(10 * 1000 * 1000));
+      rt_task_wait_period();
+    }
   }
 }
 
