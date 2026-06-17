@@ -102,8 +102,9 @@ void lightBarrierCheckTask(long i) {
   while (1) {
     int newValue = readLightBarriers();
 
-    // bitmusterToString(buffer, newValue);
-    // rt_printk("light barriers: %s", buffer);
+    bitmusterToString(buffer, newValue);
+    rt_printk("light barriers: %s", buffer);
+    rt_printk("light barriers: %s", lightBarriersData);
 
     rt_sem_wait(&semLightBarriersData);
 
