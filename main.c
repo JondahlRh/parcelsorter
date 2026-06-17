@@ -131,6 +131,8 @@ static __init int parallel_init(void) {
 static __exit void parallel_exit(void) {
   stop_rt_timer();
 
+  setRtaiBitmuster(0x0);
+
   rt_sem_delete(&semRtaiBitmuster);
   rt_sem_delete(&semParcelTrackingData);
 
