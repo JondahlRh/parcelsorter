@@ -114,16 +114,6 @@ void transferParcelTrackingRegion(int index) {
   rt_sem_signal(&semParcelTrackingData);
 }
 
-// test task
-// RT_TASK rtTestTask;
-// void testTask(long i) {
-//   while (1) {
-//     rt_printk("test task running...");
-//     rt_sleep(nano2count(1000 * 1000 * 1000));
-//     rt_task_wait_period();
-//   }
-// }
-
 int lightBarrierBitToIndexMap[5] = {LIGHT_BARRIER_2, LIGHT_BARRIER_3,
                                     LIGHT_BARRIER_4, LIGHT_BARRIER_5};
 
@@ -182,7 +172,6 @@ static __init int parallel_init(void) {
 
   rt_task_init(&rtLightBarrierCheckTask, lightBarrierCheckTask, 0x00, 3000, 4,
                0, 0);
-  // rt_task_init(&rtTestTask, testTask, 0x00, 3000, 4, 0, 0);
 
   rt_typed_sem_init(&semRtaiBitmuster, 1, RES_SEM);
   rt_typed_sem_init(&semParcelTrackingData, 1, RES_SEM);
@@ -194,7 +183,6 @@ static __init int parallel_init(void) {
   RTIME tstart = rt_get_time() + nano2count(10 * 1000 * 1000);
   rt_task_make_periodic(&rtLightBarrierCheckTask, tstart,
                         nano2count(120000000));
-  // rt_task_make_periodic(&rtTestTask, tstart, nano2count(240000000));
 
   rt_printk("__ init __");
   return 0;
@@ -210,7 +198,6 @@ static __exit void parallel_exit(void) {
   rt_sem_delete(&semLightBarriersData);
 
   rt_task_delete(&rtLightBarrierCheckTask);
-  // rt_task_delete(&rtTestTask);
 
   rt_umount();
 
