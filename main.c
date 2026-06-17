@@ -153,6 +153,12 @@ void lightBarrierTask(long i) {
     intArrayToString(buffer, parcelTrackingData, NUMBER_OF_REGIONS);
     rt_printk("parcel tracking data:    %s", buffer);
 
+    if (newValue == oldValue) {
+      rt_sleep(nano2count(10 * 1000 * 1000));
+      rt_task_wait_period();
+      continue;
+    }
+
     // check if light barrier 1 has changed
     currentValue = getLightBarrier(LIGHT_BARRIER_1, newValue, oldValue);
     if (currentValue == 0) {
@@ -178,9 +184,6 @@ void lightBarrierTask(long i) {
       rt_sem_wait(&semLightBarriersData);
       lightBarriersData = newValue;
       rt_sem_signal(&semLightBarriersData);
-
-      rt_sleep(nano2count(10 * 1000 * 1000));
-      rt_task_wait_period();
     }
   }
 }
