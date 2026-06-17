@@ -107,10 +107,10 @@ void addParcelToTracking(int parcel) {
 
 void transferParcelTrackingRegion(int index) {
   rt_sem_wait(&semParcelTrackingData);
-  parcelTrackingData[index] = 0;
   if ((index + 1) < NUMBER_OF_REGIONS) {
     parcelTrackingData[index + 1] = parcelTrackingData[index];
   }
+  parcelTrackingData[index] = 0;
   rt_sem_signal(&semParcelTrackingData);
 }
 
