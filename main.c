@@ -122,7 +122,7 @@ void lightBarrierCheckTask(long i) {
     singleNewValue = newValue & LIGHT_BARRIER_2;
     singleOldValue = lightBarriersData & LIGHT_BARRIER_2;
     if (singleNewValue != singleOldValue) {
-      // rt_printk("light barrier 2 changed");
+      rt_printk("light barrier 2 changed");
 
       if (singleNewValue == 1) {
         activate(BELT_1);
