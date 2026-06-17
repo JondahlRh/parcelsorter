@@ -123,10 +123,22 @@ void addParcelToTracking(int parcel) {
  * Get parcel tracking data at provided index
  */
 int getParcelTrackingDataAtIndex(int index) {
+  int output;
+
   rt_sem_wait(&semParcelTrackingData);
-  int output = parcelTrackingData[index];
+  output = parcelTrackingData[index];
   rt_sem_signal(&semParcelTrackingData);
+
   return output;
+}
+
+/**
+ * Reset parcel tracking data at provided index
+ */
+void resetParcelTrackingDataAtIndex(int index) {
+  rt_sem_wait(&semParcelTrackingData);
+  parcelTrackingData[index] = 0;
+  rt_sem_signal(&semParcelTrackingData);
 }
 
 /**
@@ -206,7 +218,7 @@ void lightBarrierTask(long i) {
 
 RT_TASK rtEjectionTask;
 void ejectionTask(long i) {
-  int index, lightBarriersData, parcelData;
+  int index, lightBarriersData, parcelData, ejectorIdAsParcelTrackingIndex;
 
   while (1) {
     // get internal light barrier data
@@ -216,9 +228,15 @@ void ejectionTask(long i) {
 
     // loop all ejectors and eject parcel data matches ejector id
     for (index = 0; index < NUMBER_OF_EJECTORS; index++) {
-      parcelData = getParcelTrackingDataAtIndex((index + 1) * 2);
+      ejectorIdAsParcelTrackingIndex = (index + 1) * 2;
+      parcelData = getParcelTrackingDataAtIndex(ejectorIdAsParcelTrackingIndex);
       if (parcelData == (index + 1)) {
         rt_printk("ejection %d...", index + 1);
+        resetParcelTrackingDataAtIndex(ejectorIdAsParcelTrackingIndex);
+
+        activate(ejectorsIndexMap[index]);
+        rt_busy_sleep(nano2count(1000 * 1000));
+        deactivate(ejectorsIndexMap[index]);
       }
     }
 
