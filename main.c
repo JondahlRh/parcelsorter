@@ -2,9 +2,9 @@
 #include <linux/module.h>
 #include <linux/pci.h>
 #include <rtai.h>
+#include <rtai_fifos.h>
 #include <rtai_sched.h>
 #include <rtai_sem.h>
-#include <rtai_fifos.h>
 
 //! TMP
 int countingNumber = 0;
@@ -269,13 +269,26 @@ void ejectionTask(long i) {
 
 // fifo handler
 void fifoHandler(int i) {
-  char buffer[FIFO_SIZE];
-  int returnValue;
+  char buffer[FIFO_SIZE], firstChar;
+  int returnValue, output;
 
   returnValue = rtf_get(FIFO_NUMBER, buffer, FIFO_SIZE);
-  if (returnValue == 0) return 0;
+  if (returnValue == 0) {
+    rt_printk("errorcode: %d", returnValue);
+    return 0;
+  }
 
-  rt_printk("fifo: %s", buffer);
+  firstChar = buffer[0];
+  if (firstChar != '1' && firstChar != '4' && firstChar != '9') {
+    firstChar = '0';
+  }
+  rt_printk("fifo: %c", firstChar);
+
+  // update fifo value
+  rt_sem_wait(&semFifoValue);
+  fifoValue = firstChar - '0';
+  rt_sem_signal(&semFifoValue);
+
   return 0;
 }
 
