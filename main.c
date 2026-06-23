@@ -230,7 +230,7 @@ void ejectionTask(long i) {
       // TODO: calc delay for safe ejection
 
       activate(ejectorsIndexMap[index]);
-      rt_busy_sleep(1000 * 1000);  // TODO: calc needed delay for exejction
+      rt_sleep(600 * 1000 * 1000);  // TODO: calc needed delay for exejction
       deactivate(ejectorsIndexMap[index]);
     }
 
