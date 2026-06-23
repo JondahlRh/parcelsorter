@@ -254,16 +254,17 @@ static __init int parallel_init(void) {
   rt_typed_sem_init(&semParcelTrackingData, 1, RES_SEM);
   rt_typed_sem_init(&semLightBarriersData, 1, RES_SEM);
 
+  RTIME timer;
+  timer = nano2count(100 * 1000 * 1000);
+
   rt_set_periodic_mode();
-  start_rt_timer(0);
+  start_rt_timer(timer);
 
-  // TODO: timings
-  RTIME tstart1, tstart2;
-  tstart1 = rt_get_time() + nano2count(1000 * 1000);
-  tstart2 = rt_get_time() + nano2count(100 * 1000 * 1000);
+  RTIME tstart;
+  tstart = rt_get_time() + nano2count(100 * 1000 * 1000);
 
-  rt_task_make_periodic(&rtLightBarrierTask, tstart1, nano2count(120000000));
-  rt_task_make_periodic(&rtEjectionTask, tstart2, nano2count(120000000));
+  rt_task_make_periodic(&rtLightBarrierTask, tstart, timer);
+  rt_task_make_periodic(&rtEjectionTask, tstart, timer);
 
   rt_printk("__ init __");
   return 0;
