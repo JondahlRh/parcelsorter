@@ -149,6 +149,17 @@ void transferParcelTrackingRegion(int index) {
   rt_sem_signal(&semParcelTrackingData);
 }
 
+bool isEjectionSaveAtIndex(int index) {
+  int valueBefore, valueAfter;
+
+  rt_sem_wait(&semParcelTrackingData);
+  valueBefore = parcelTrackingData[index - 1];
+  valueAfter = parcelTrackingData[index + 1];
+  rt_sem_signal(&semParcelTrackingData);
+
+  return valueBefore == 1 && valueAfter == 1;
+}
+
 // light barrier task:
 // check if light barriers have changed and transfer parcel tracking data
 RT_TASK rtLightBarrierTask;
@@ -233,6 +244,10 @@ void ejectionTask(long i) {
       resetParcelTrackingDataAtIndex((index + 1) * 2);
 
       rt_sleep(nano2count(100 * 1000 * 1000));
+
+      while (!isEjectionSaveAtIndex((index + 1) * 2)) {
+        rt_sleep(nano2count(1000 * 1000));
+      }
 
       activate(ejectorsIndexMap[index]);
       rt_sleep(nano2count(300 * 1000 * 1000));
