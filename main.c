@@ -4,6 +4,7 @@
 #include <rtai.h>
 #include <rtai_sched.h>
 #include <rtai_sem.h>
+#include <rtai_fifos.h>
 
 //! TMP
 int countingNumber = 0;
