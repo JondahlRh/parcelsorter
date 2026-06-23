@@ -232,10 +232,10 @@ void ejectionTask(long i) {
       rt_printk("ejection %d...", index + 1);
       resetParcelTrackingDataAtIndex((index + 1) * 2);
 
-      // TODO: calc delay for safe ejection
+      rt_sleep(100 * 1000 * 1000);
 
       activate(ejectorsIndexMap[index]);
-      rt_sleep(600 * 1000 * 1000);  // TODO: calc needed delay for exejction
+      rt_sleep(300 * 1000 * 1000);
       deactivate(ejectorsIndexMap[index]);
     }
 
