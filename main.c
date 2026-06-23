@@ -5,6 +5,9 @@
 #include <rtai_sched.h>
 #include <rtai_sem.h>
 
+//! TMP
+int countingNumber = 0;
+
 // rtai definitions and variables
 #define RTAI_ADDRESS 0xC000
 int rtaiBitmuster = 0x00;
@@ -200,7 +203,7 @@ void lightBarrierTask(long i) {
         getLightBarrierValueIfChanged(LIGHT_BARRIER_1, newValue, oldValue);
     if (currentValue == 0) {
       // TODO: scanner
-      addParcelToTracking(9);
+      addParcelToTracking(countingNumber++ % 3 + 1);
 
       deactivate(BELT_1);
     } else if (currentValue == 1) {
