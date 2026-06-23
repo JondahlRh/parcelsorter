@@ -210,13 +210,6 @@ void lightBarrierTask(long i) {
       activate(BELT_1);
     }
 
-    // check if light barrier 2 has changed
-    currentValue =
-        getLightBarrierValueIfChanged(LIGHT_BARRIER_2, newValue, oldValue);
-    if (currentValue == 0) {
-      activate(BELT_1);
-    }
-
     // check if light barriers (after first) have changed
     for (index = 0; index < NUMBER_OF_LIGHT_BARRIERS; index++) {
       currentValue = getLightBarrierValueIfChanged(lightBarriersIndexMap[index],
