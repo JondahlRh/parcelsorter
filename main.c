@@ -12,9 +12,9 @@ SEM semRtaiBitmuster;
 
 #define BELT_1 0x01
 #define BELT_2 0x02
-#define EJECTOR_1 0x04
-#define EJECTOR_2 0x08
-#define EJECTOR_3 0x10
+#define EJECTOR_1 0x08
+#define EJECTOR_2 0x10
+#define EJECTOR_3 0x20
 #define BARCODE_SCANNER 0x80
 
 #define NUMBER_OF_EJECTORS 3
