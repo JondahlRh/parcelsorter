@@ -253,7 +253,7 @@ void ejectionTask(long i) {
       }
 
       activate(ejectorsIndexMap[index]);
-      rt_sleep(nano2count(300 * 1000 * 1000));
+      rt_sleep(nano2count(500 * 1000 * 1000));
       deactivate(ejectorsIndexMap[index]);
     }
 
