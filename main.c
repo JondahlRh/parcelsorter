@@ -149,6 +149,9 @@ void transferParcelTrackingRegion(int index) {
   rt_sem_signal(&semParcelTrackingData);
 }
 
+/**
+ * Check if ejection save at provided index (check index before and after)
+ */
 bool isEjectionSaveAtIndex(int index) {
   int valueBefore, valueAfter;
 
@@ -157,7 +160,7 @@ bool isEjectionSaveAtIndex(int index) {
   valueAfter = parcelTrackingData[index + 1];
   rt_sem_signal(&semParcelTrackingData);
 
-  return valueBefore == 1 && valueAfter == 1;
+  return valueBefore == 0 && valueAfter == 0;
 }
 
 // light barrier task:
