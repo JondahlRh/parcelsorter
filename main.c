@@ -42,6 +42,12 @@ SEM semLightBarriersData;
 int lightBarriersIndexMap[NUMBER_OF_LIGHT_BARRIERS] = {
     LIGHT_BARRIER_2, LIGHT_BARRIER_3, LIGHT_BARRIER_4, LIGHT_BARRIER_5};
 
+// fifo definitions and variables
+#define FIFO_SIZE 1024
+#define FIFO_NUMBER 3
+int fifoValue;
+SEM semFifoValue;
+
 /**
  * Convert a byte to a string (for debugging purposes)
  */
@@ -202,11 +208,14 @@ void lightBarrierTask(long i) {
     currentValue =
         getLightBarrierValueIfChanged(LIGHT_BARRIER_1, newValue, oldValue);
     if (currentValue == 0) {
-      // TODO: scanner
-      addParcelToTracking(countingNumber++ % 3 + 1);
-
+      activate(BARCODE_SCANNER);
       deactivate(BELT_1);
+
+      // TODO: wait for barcode value
+
+      addParcelToTracking(countingNumber++ % 3 + 1);
     } else if (currentValue == 1) {
+      deactivate(BARCODE_SCANNER);
       activate(BELT_1);
     }
 
@@ -257,12 +266,27 @@ void ejectionTask(long i) {
   }
 }
 
+// fifo handler
+void fifoHandler(int i) {
+  char buffer[FIFO_SIZE];
+  int returnValue;
+
+  returnValue = rtf_get(FIFO_NUMBER, buffer, FIFO_SIZE);
+  if (returnValue == 0) return 0;
+
+  rt_printk("fifo: %s", buffer);
+  return 0;
+}
+
 static __init int parallel_init(void) {
   rt_mount();
 
   // TODO: priorities
   rt_task_init(&rtLightBarrierTask, lightBarrierTask, 0x00, 3000, 4, 0, 0);
   rt_task_init(&rtEjectionTask, ejectionTask, 0x00, 3000, 4, 0, 0);
+
+  rtf_create(FIFO_NUMBER, FIFO_SIZE);
+  rtf_create_handler(FIFO_NUMBER, &fifoHandler);
 
   rt_typed_sem_init(&semRtaiBitmuster, 1, RES_SEM);
   rt_typed_sem_init(&semParcelTrackingData, 1, RES_SEM);
