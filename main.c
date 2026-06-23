@@ -177,8 +177,6 @@ void lightBarrierTask(long i) {
 
     // if nothing has changed, wait and continue
     if (newValue == oldValue) {
-      // TODO: timings
-      rt_sleep(nano2count(10 * 1000 * 1000));
       rt_task_wait_period();
       continue;
     }
@@ -241,8 +239,6 @@ void ejectionTask(long i) {
       deactivate(ejectorsIndexMap[index]);
     }
 
-    // TODO: timings
-    rt_sleep(nano2count(500 * 1000 * 1000));
     rt_task_wait_period();
   }
 }
