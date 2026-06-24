@@ -45,7 +45,7 @@ int lightBarriersIndexMap[NUMBER_OF_LIGHT_BARRIERS] = {
 
 // fifo definitions and variables
 #define FIFO_SIZE 1024
-#define FIFO_NUMBER 3
+#define FIFO_NUMBER 2
 int fifoValue;
 SEM semFifoValue;
 
@@ -173,6 +173,38 @@ bool isEjectionSaveAtIndex(int index) {
   return valueBefore == 0 && valueAfter == 0;
 }
 
+/**
+ * Get barcode value
+ */
+int getBarcodeValue(void) {
+  int value;
+
+  rt_sem_wait(&semFifoValue);
+  value = fifoValue;
+  rt_sem_signal(&semFifoValue);
+
+  return value;
+}
+
+/**
+ * Reset barcode value to 0
+ */
+void resetBarcodeValue(void) {
+  rt_sem_wait(&semFifoValue);
+  fifoValue = 0;
+  rt_sem_signal(&semFifoValue);
+}
+
+/**
+ * Map barcode value to ejector id
+ */
+int mapBarcodeValueToEjector(int value) {
+  if (value == 1) return 1;
+  if (value == 4) return 2;
+  if (value == 9) return 3;
+  return 0;
+}
+
 // light barrier task:
 // check if light barriers have changed and transfer parcel tracking data
 RT_TASK rtLightBarrierTask;
@@ -212,11 +244,14 @@ void lightBarrierTask(long i) {
       activate(BARCODE_SCANNER);
       deactivate(BELT_1);
 
-      // TODO: wait for barcode value
+      while (getBarcodeValue() == 0) {
+        rt_sleep(nano2count(1000 * 1000));
+      }
 
-      addParcelToTracking(countingNumber++ % 3 + 1);
+      addParcelToTracking(mapBarcodeValueToEjector(getBarcodeValue()));
     } else if (currentValue == 1) {
       deactivate(BARCODE_SCANNER);
+      resetBarcodeValue();
       activate(BELT_1);
     }
 
@@ -279,10 +314,9 @@ void fifoHandler(int i) {
   }
 
   firstChar = buffer[0];
-  if (firstChar != '1' && firstChar != '4' && firstChar != '9') {
+  if (firstChar > '9' || firstChar < '0') {
     firstChar = '0';
   }
-  rt_printk("fifo: %c", firstChar);
 
   // update fifo value
   rt_sem_wait(&semFifoValue);
