@@ -327,6 +327,8 @@ static __exit void parallel_exit(void) {
 
   setRtaiBitmuster(0x0);
 
+  rtf_destroy(FIFO_NUMBER);
+
   rt_sem_delete(&semRtaiBitmuster);
   rt_sem_delete(&semParcelTrackingData);
   rt_sem_delete(&semLightBarriersData);
