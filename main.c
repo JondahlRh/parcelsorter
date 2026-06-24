@@ -325,7 +325,7 @@ static __init int parallel_init(void) {
   rt_mount();
 
   // TODO: priorities
-  rt_task_init(&rtLightBarrierTask, lightBarrierTask, 0x00, 3000, 4, 0, 0);
+  rt_task_init(&rtLightBarrierTask, lightBarrierTask, 0x00, 3000, 5, 0, 0);
   rt_task_init(&rtEjectionTask, ejectionTask, 0x00, 3000, 4, 0, 0);
 
   rtf_create(FIFO_NUMBER, FIFO_SIZE);
