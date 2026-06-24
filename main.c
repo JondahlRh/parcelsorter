@@ -319,8 +319,6 @@ void fifoHandler(int i) {
   rt_sem_wait(&semFifoValue);
   fifoValue = firstChar - '0';
   rt_sem_signal(&semFifoValue);
-
-  return 0;
 }
 
 static __init int parallel_init(void) {
