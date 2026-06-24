@@ -6,9 +6,6 @@
 #include <rtai_sched.h>
 #include <rtai_sem.h>
 
-//! TMP
-int countingNumber = 0;
-
 // rtai definitions and variables
 #define RTAI_ADDRESS 0xC000
 int rtaiBitmuster = 0x00;
