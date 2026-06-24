@@ -310,7 +310,7 @@ void fifoHandler(int i) {
     return 0;
   }
 
-  firstChar = buffer[0];
+  firstChar = buffer[1];
   if (firstChar > '9' || firstChar < '0') {
     firstChar = '0';
   }
