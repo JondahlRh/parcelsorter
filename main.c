@@ -43,7 +43,7 @@ int lightBarriersIndexMap[NUMBER_OF_LIGHT_BARRIERS] = {
 // fifo definitions and variables
 #define FIFO_SIZE 1024
 #define FIFO_NUMBER 2
-int fifoValue;
+int fifoValue = -1;
 SEM semFifoValue;
 
 /**
@@ -188,7 +188,7 @@ int getBarcodeValue(void) {
  */
 void resetBarcodeValue(void) {
   rt_sem_wait(&semFifoValue);
-  fifoValue = 0;
+  fifoValue = -1;
   rt_sem_signal(&semFifoValue);
 }
 
@@ -241,7 +241,7 @@ void lightBarrierTask(long i) {
       activate(BARCODE_SCANNER);
       deactivate(BELT_1);
 
-      while (getBarcodeValue() == 0) {
+      while (getBarcodeValue() == -1) {
         rt_sleep(nano2count(1000 * 1000));
       }
 
