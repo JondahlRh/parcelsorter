@@ -276,6 +276,7 @@ int fifo_readScannerData(int i) {
   }
 
   addNewParcelToTrackingData(firstChar - '0');
+  return 0;
 }
 
 RTIME timer, tstart;
