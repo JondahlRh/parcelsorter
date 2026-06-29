@@ -203,10 +203,9 @@ static __init int parallel_init(void) {
 
   rt_task_init(&rttask_readAndUpdateLightBarriers,
                task_readAndUpdateLightBarriers, 0x00, 3000, 4, 0, 0);
+  rt_task_init(&rttask_moveParcel, task_moveParcel, 0x00, 3000, 3, 0, 0);
   rt_task_init(&rttask_checkParcelEjection, task_checkParcelEjection, 0x00,
                3000, 2, 0, 0);
-
-  rt_task_init(&rttask_moveParcel, task_moveParcel, 0x00, 3000, 3, 0, 0);
   rt_task_init(&rttask_ejectParcel, task_ejectParcel, 0x00, 3000, 1, 0, 0);
 
   rtf_create(FIFO_NUMBER, FIFO_SIZE);
@@ -223,11 +222,11 @@ static __init int parallel_init(void) {
 
   rt_task_make_periodic(&rttask_readAndUpdateLightBarriers, /* .. */,
                         /* .. */);
+  rt_task_make_periodic(&rttask_moveParcel, /* .. */, /* .. */);
   rt_task_make_periodic(&rttask_checkParcelEjection, /* .. */,
                         /* .. */);
-
-  rt_task_run(&rttask_moveParcel);
-  rt_task_run(&rttask_ejectParcel);
+  rt_task_make_periodic(&rttask_ejectParcel, /* .. */,
+                        /* .. */);
 
   return 0;
 }
