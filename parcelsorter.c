@@ -125,7 +125,38 @@ RT_TASK rttask_readAndUpdateLightBarriers;
 /**
  * Task: Reads the light barriers and updates the internal state
  */
-void task_readAndUpdateLightBarriers(void) {}
+void task_readAndUpdateLightBarriers(void) {
+  int newValue, oldValue;
+
+  while (true) {
+    // read the current state of the light barriers
+    newValue = readLightBarriers();
+
+    // read und update internal state of light barriers
+    rt_sem_wait(&sem_internalLightBarriersData);
+    oldValue = internalLightBarriersData;
+    internalLightBarriersData = newValue;
+    rt_sem_signal(&sem_internalLightBarriersData);
+
+    // if nothing has changed, wait and continue
+    if (newValue == oldValue) {
+      rt_task_wait_period();
+      continue;
+    };
+
+    int i;
+    for (i = 1; i < NUMBER_OF_LIGHT_BARRIERS; i++) {
+      if ((newData & LIGHT_BARRIERS[i]) == (oldData & LIGHT_BARRIERS[i])) {
+        continue;
+      }
+
+      // TODO: trigger task to move parcel and pass the index of the barrier
+      // TODO: that has changed
+    }
+
+    rt_task_wait_period();
+  }
+}
 
 RT_TASK rttask_moveParcel;
 /**
