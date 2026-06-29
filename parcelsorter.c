@@ -5,6 +5,7 @@
 #include <rtai_fifos.h>
 #include <rtai_sched.h>
 #include <rtai_sem.h>
+#include <rtai_mbx.h>
 
 // address of the rtai module
 #define RTAI_ADDRESS 0xC000
