@@ -108,7 +108,7 @@ void toggle(int value) {
 /**
  * Function to add a new parcel to the parcel tracking data
  */
-void addNewParcel(int scannerValue) {
+void addNewParcelToTrackingData(int scannerValue) {
   int ejectionId;
 
   if (scannerValue == 1) ejectionId = 1;
@@ -120,6 +120,31 @@ void addNewParcel(int scannerValue) {
   parcelTrackingData[0] = ejectionId;
 
   rt_sem_signal(&sem_parcelTrackingData);
+}
+
+/**
+ * Function to reset the parcel tracking data at index
+ */
+void resetParcelTrackingDataAtIndex(int index) {
+  rt_sem_wait(&sem_parcelTrackingData);
+
+  parcelTrackingData[index] = 0;
+
+  rt_sem_signal(&sem_parcelTrackingData);
+}
+
+/**
+ * Function to check if the parcel at index is safe to eject
+ */
+bool isEjectionSaveAtIndex(int index) {
+  int valueBefore, valueAfter;
+
+  rt_sem_wait(&semParcelTrackingData);
+  valueBefore = parcelTrackingData[index - 1];
+  valueAfter = parcelTrackingData[index + 1];
+  rt_sem_signal(&semParcelTrackingData);
+
+  return valueBefore == 0 && valueAfter == 0;
 }
 
 /**
@@ -157,7 +182,10 @@ void task_readAndUpdateLightBarriers(void) {
         continue;
       }
 
-      // TODO: trigger task to move parcel with index and value of light barrier
+      // TODO: trigger task to move parcel with parcelTrackingIndex
+
+      //! TMP
+      int parcelTrackingIndex = i * 2 + newData & LIGHT_BARRIERS[i] - 1;
     }
 
     rt_task_wait_period();
@@ -169,17 +197,13 @@ RT_TASK rttask_moveParcel;
  * Task: Move parcel to the next region
  */
 void task_moveParcel(void) {
-  int lightBarrierIndex, lightBarrierNewValue, parcelTrackingIndex,
-      parcelEjectionId;
+  int parcelTrackingIndex, parcelEjectionId;
 
   while (true) {
     rt_sem_wait(&sem_triggerParcelMovement);
 
     // TODO: get index and new value of light barrier that has changed
-    lightBarrierIndex = 2;
-    lightBarrierNewValue = 1;
-
-    parcelTrackingIndex = lightBarrierIndex * 2 + lightBarrierNewValue - 1;
+    parcelTrackingIndex = 3;
 
     rt_sem_wait(&sem_parcelTrackingData);
     parcelEjectionId = parcelTrackingData[parcelTrackingIndex];
@@ -200,7 +224,28 @@ RT_TASK rttask_ejectParcel;
 /**
  * Task: Eject a parcel if safe
  */
-void task_ejectParcel(void) {}
+void task_ejectParcel(void) {
+  int parcelEjectionId;
+
+  while (true) {
+    rt_sem_wait(&sem_triggerParcelEjection);
+
+    // TODO: get id of ejector
+    parcelEjectionId = 1;
+
+    // minimum sleep before ejecting can be safe
+    rt_sleep(nano2count(100 * 1000 * 1000));  // TODO: RTIME
+
+    while (!isEjectionSaveAtIndex((index + 1) * 2)) {
+      rt_sleep(nano2count(10 * 1000 * 1000));  // TODO: RTIME
+      rt_task_wait_period();
+    }
+
+    activate(EJECTORS[ejectionId - 1]);
+    rt_sleep(nano2count(500 * 1000 * 1000));
+    deactivate(EJECTORS[ejectionId - 1]);
+  }
+}
 
 /**
  * Fifo: Read new Scanner Data and set the internal state
@@ -217,7 +262,7 @@ void fifo_readScannerData(void) {
     firstChar = '0';
   }
 
-  addNewParcel(firstChar - '0');
+  addNewParcelToTrackingData(firstChar - '0');
 }
 
 static __init int parallel_init(void) {
