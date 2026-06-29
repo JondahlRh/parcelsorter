@@ -42,6 +42,11 @@ SEM sem_triggerParcelEjection;
 int parcelTrackingData[NUMBER_OF_PARCEL_REGIONS];
 SEM sem_parcelTrackingData;
 
+// mailboxes
+#define MAILBOX_SIZE 1024
+MBX mailbox_moveParcel;
+MBX mailbox_ejectParcel;
+
 /**
  * Helper function to convert a bitmask to a string
  */
@@ -157,7 +162,7 @@ RT_TASK rttask_readAndUpdateLightBarriers;
  * Task: Reads the light barriers and updates the internal state
  */
 void task_readAndUpdateLightBarriers(void) {
-  int newValue, oldValue;
+  int newValue, oldValue, parcelTrackingIndex;
   char buffer[9];
 
   while (true) {
@@ -201,10 +206,8 @@ void task_readAndUpdateLightBarriers(void) {
         continue;
       }
 
-      // TODO: trigger task to move parcel with parcelTrackingIndex
-
-      //! TMP
-      int parcelTrackingIndex = i * 2 + newValue & LIGHT_BARRIERS[i] - 1;
+      parcelTrackingIndex = i * 2 + newValue & LIGHT_BARRIERS[i] - 1;
+      rt_mbx_send(&mailbox_moveParcel, parcelTrackingIndex, sizeof(int));
     }
 
     rt_task_wait_period();
@@ -219,10 +222,7 @@ void task_moveParcel(void) {
   int parcelTrackingIndex, parcelEjectionId;
 
   while (true) {
-    rt_sem_wait(&sem_triggerParcelMovement);
-
-    // TODO: get index and new value of light barrier that has changed
-    parcelTrackingIndex = 3;
+    rt_mbx_receive(&mailbox_moveParcel, &lightBarrierIndex, sizeof(int));
 
     rt_sem_wait(&sem_parcelTrackingData);
     parcelEjectionId = parcelTrackingData[parcelTrackingIndex];
@@ -234,7 +234,7 @@ void task_moveParcel(void) {
 
     if (parcelTrackingIndex % 2 == 0 &&
         parcelEjectionId == parcelTrackingIndex / 2) {
-      // TODO: trigger task to eject parcel with id of ejector
+      rt_mbx_send(&mailbox_ejectParcel, &parcelEjectionId, sizeof(int));
     }
   }
 }
@@ -249,8 +249,7 @@ void task_ejectParcel(void) {
   while (true) {
     rt_sem_wait(&sem_triggerParcelEjection);
 
-    // TODO: get id of ejector
-    parcelEjectionId = 1;
+    rt_mbx_receive(&mailbox_ejectParcel, &parcelEjectionId, sizeof(int));
 
     // minimum sleep before ejecting can be safe
     rt_sleep(nano2count(100 * 1000 * 1000));  // TODO: RTIME
@@ -304,19 +303,23 @@ static __init int parallel_init(void) {
   rt_typed_sem_init(&sem_internalLightBarriersData, 1, RES_SEM);
   rt_typed_sem_init(&sem_parcelTrackingData, 1, RES_SEM);
 
-  rt_typed_sem_init(&sem_triggerParcelMovement, 1, RES_SEM);
-  rt_typed_sem_init(&sem_triggerParcelEjection, 1, RES_SEM);
+  rt_typed_mbx_init(&mailbox_moveParcel, MAILBOX_SIZE, FIFO_Q);
+  rt_typed_mbx_init(&mailbox_ejectParcel, MAILBOX_SIZE, FIFO_Q);
 
   // TODO: RTIME
+  RTIME timer;
+  timer = nano2count(100 * 1000 * 1000);
 
   rt_set_periodic_mode();
-  start_rt_timer(/* .. */);
+  start_rt_timer(timer);
 
-  rt_task_make_periodic(&rttask_readAndUpdateLightBarriers, /* .. */,
-                        /* .. */);
-  rt_task_make_periodic(&rttask_moveParcel, /* .. */, /* .. */);
-  rt_task_make_periodic(&rttask_ejectParcel, /* .. */,
-                        /* .. */);
+  // TODO: RTIME
+  RTIME tstart;
+  tstart = rt_get_time() + nano2count(100 * 1000 * 1000);
+
+  rt_task_make_periodic(&rttask_readAndUpdateLightBarriers, tstart, timer);
+  rt_task_make_periodic(&rttask_moveParcel, tstart, timer);
+  rt_task_make_periodic(&rttask_ejectParcel, tstart, timer);
 
   return 0;
 }
@@ -333,8 +336,8 @@ static __exit void parallel_exit(void) {
   rt_typed_sem_destroy(&sem_internalLightBarriersData);
   rt_typed_sem_destroy(&sem_parcelTrackingData);
 
-  rt_typed_sem_destroy(&sem_triggerParcelMovement);
-  rt_typed_sem_destroy(&sem_triggerParcelEjection);
+  rt_mbx_delete(&mailbox_moveParcel);
+  rt_mbx_delete(&mailbox_ejectParcel);
 
   rt_task_delete(&rttask_readAndUpdateLightBarriers);
   rt_task_delete(&rttask_moveParcel);
