@@ -196,12 +196,6 @@ void task_moveParcel(void) {
   }
 }
 
-RT_TASK rttask_checkParcelEjection;
-/**
- * Task: Check if a parcel should be ejected
- */
-void task_checkParcelEjection(void) {}
-
 RT_TASK rttask_ejectParcel;
 /**
  * Task: Eject a parcel if safe
@@ -234,10 +228,8 @@ static __init int parallel_init(void) {
   setRtaiBitmuster(0x00);
 
   rt_task_init(&rttask_readAndUpdateLightBarriers,
-               task_readAndUpdateLightBarriers, 0x00, 3000, 4, 0, 0);
-  rt_task_init(&rttask_moveParcel, task_moveParcel, 0x00, 3000, 3, 0, 0);
-  rt_task_init(&rttask_checkParcelEjection, task_checkParcelEjection, 0x00,
-               3000, 2, 0, 0);
+               task_readAndUpdateLightBarriers, 0x00, 3000, 3, 0, 0);
+  rt_task_init(&rttask_moveParcel, task_moveParcel, 0x00, 3000, 2 0, 0);
   rt_task_init(&rttask_ejectParcel, task_ejectParcel, 0x00, 3000, 1, 0, 0);
 
   rtf_create(FIFO_NUMBER, FIFO_SIZE);
@@ -247,6 +239,9 @@ static __init int parallel_init(void) {
   rt_typed_sem_init(&sem_internalLightBarriersData, 1, RES_SEM);
   rt_typed_sem_init(&sem_parcelTrackingData, 1, RES_SEM);
 
+  rt_typed_sem_init(&sem_triggerParcelMovement, 1, RES_SEM);
+  rt_typed_sem_init(&sem_triggerParcelEjection, 1, RES_SEM);
+
   // TODO: RTIME
 
   rt_set_periodic_mode();
@@ -255,8 +250,6 @@ static __init int parallel_init(void) {
   rt_task_make_periodic(&rttask_readAndUpdateLightBarriers, /* .. */,
                         /* .. */);
   rt_task_make_periodic(&rttask_moveParcel, /* .. */, /* .. */);
-  rt_task_make_periodic(&rttask_checkParcelEjection, /* .. */,
-                        /* .. */);
   rt_task_make_periodic(&rttask_ejectParcel, /* .. */,
                         /* .. */);
 
@@ -275,9 +268,11 @@ static __exit void parallel_exit(void) {
   rt_typed_sem_destroy(&sem_internalLightBarriersData);
   rt_typed_sem_destroy(&sem_parcelTrackingData);
 
-  rt_task_delete(&rttask_readLightBarriers);
+  rt_typed_sem_destroy(&sem_triggerParcelMovement);
+  rt_typed_sem_destroy(&sem_triggerParcelEjection);
+
+  rt_task_delete(&rttask_readAndUpdateLightBarriers);
   rt_task_delete(&rttask_moveParcel);
-  rt_task_delete(&rttask_checkParcel);
   rt_task_delete(&rttask_ejectParcel);
 
   rt_umount();
