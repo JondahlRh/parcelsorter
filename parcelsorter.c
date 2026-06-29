@@ -163,7 +163,7 @@ RT_TASK rttask_readAndUpdateLightBarriers;
  * Task: Reads the light barriers and updates the internal state
  */
 void task_readAndUpdateLightBarriers(long i) {
-  int newValue, oldValue, parcelTrackingIndex, i;
+  int newValue, oldValue, parcelTrackingIndex, idx;
   char buffer[9];
 
   while (true) {
@@ -200,13 +200,13 @@ void task_readAndUpdateLightBarriers(long i) {
       }
     }
 
-    for (i = 1; i < NUMBER_OF_LIGHT_BARRIERS; i++) {
+    for (idx = 1; idx < NUMBER_OF_LIGHT_BARRIERS; idx++) {
       // ignore if the light barrier has not changed
-      if ((newValue & LIGHT_BARRIERS[i]) == (oldValue & LIGHT_BARRIERS[i])) {
+      if ((newValue & LIGHT_BARRIERS[idx]) == (oldValue & LIGHT_BARRIERS[idx])) {
         continue;
       }
 
-      parcelTrackingIndex = i * 2 + (newValue & LIGHT_BARRIERS[i]) - 1;
+      parcelTrackingIndex = idx * 2 + (newValue & LIGHT_BARRIERS[idx]) - 1;
       rt_mbx_send(&mailbox_moveParcel, parcelTrackingIndex, sizeof(int));
     }
 
