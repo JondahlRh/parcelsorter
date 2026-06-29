@@ -158,6 +158,7 @@ RT_TASK rttask_readAndUpdateLightBarriers;
  */
 void task_readAndUpdateLightBarriers(void) {
   int newValue, oldValue;
+  char buffer[9];
 
   while (true) {
     // read the current state of the light barriers
@@ -168,6 +169,14 @@ void task_readAndUpdateLightBarriers(void) {
     oldValue = internalLightBarriersData;
     internalLightBarriersData = newValue;
     rt_sem_signal(&sem_internalLightBarriersData);
+
+    // debugging
+    byteToString(buffer, newValue);
+    rt_printk("light barriers new:      %s", buffer);
+    byteToString(buffer, internalLightBarriersData);
+    rt_printk("light barriers internal: %s", buffer);
+    intArrayToString(buffer, parcelTrackingData, NUMBER_OF_PARCEL_REGIONS);
+    rt_printk("parcel tracking data:    %s", buffer);
 
     // if nothing has changed, wait and continue
     if (newValue == oldValue) {
