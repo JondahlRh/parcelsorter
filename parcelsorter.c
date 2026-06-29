@@ -207,7 +207,7 @@ void task_readAndUpdateLightBarriers(long i) {
       }
 
       parcelTrackingIndex = idx * 2 + (newValue & LIGHT_BARRIERS[idx]) - 1;
-      rt_mbx_send(&mailbox_moveParcel, parcelTrackingIndex, sizeof(int));
+      rt_mbx_send(&mailbox_moveParcel, &parcelTrackingIndex, sizeof(int));
     }
 
     rt_task_wait_period();
