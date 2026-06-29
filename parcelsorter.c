@@ -268,7 +268,10 @@ int fifo_readScannerData(int i) {
   int fifoReturnValue;
 
   fifoReturnValue = rtf_get(FIFO_NUMBER, buffer, FIFO_SIZE);
-  if (fifoReturnValue == 0) return 0;
+  if (fifoReturnValue == 0) {
+    rt_printk("Parcelsorter: FIFO empty, %d", fifoReturnValue);
+    return 0;
+  }
 
   firstChar = buffer[1];
   if (firstChar > '9' || firstChar < '0') {
