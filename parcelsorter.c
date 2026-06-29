@@ -172,14 +172,6 @@ void task_readAndUpdateLightBarriers(long i) {
     internalLightBarriersData = newValue;
     rt_sem_signal(&sem_internalLightBarriersData);
 
-    // debugging
-    bitmaskToString(buffer, newValue);
-    rt_printk("light barriers new:      %s", buffer);
-    bitmaskToString(buffer, internalLightBarriersData);
-    rt_printk("light barriers internal: %s", buffer);
-    intArrayToString(buffer, parcelTrackingData, NUMBER_OF_PARCEL_REGIONS);
-    rt_printk("parcel tracking data:    %s", buffer);
-
     // if nothing has changed, wait and continue
     if (newValue == oldValue) {
       rt_task_wait_period();
