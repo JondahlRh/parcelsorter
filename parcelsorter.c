@@ -3,9 +3,9 @@
 #include <linux/pci.h>
 #include <rtai.h>
 #include <rtai_fifos.h>
+#include <rtai_mbx.h>
 #include <rtai_sched.h>
 #include <rtai_sem.h>
-#include <rtai_mbx.h>
 
 // address of the rtai module
 #define RTAI_ADDRESS 0xC000
@@ -163,7 +163,7 @@ RT_TASK rttask_readAndUpdateLightBarriers;
  * Task: Reads the light barriers and updates the internal state
  */
 void task_readAndUpdateLightBarriers(long i) {
-  int newValue, oldValue, parcelTrackingIndex;
+  int newValue, oldValue, parcelTrackingIndex, i;
   char buffer[9];
 
   while (true) {
@@ -191,7 +191,7 @@ void task_readAndUpdateLightBarriers(long i) {
     };
 
     if ((newValue & LIGHT_BARRIERS[0]) != (oldValue & LIGHT_BARRIERS[0])) {
-      if (newValue & LIGHT_BARRIERS[0] == 0) {
+      if ((newValue & LIGHT_BARRIERS[0]) == 0) {
         activate(BARCODE_SCANNER);
         deactivate(BELTS[0]);
       } else {
@@ -200,14 +200,13 @@ void task_readAndUpdateLightBarriers(long i) {
       }
     }
 
-    int i;
     for (i = 1; i < NUMBER_OF_LIGHT_BARRIERS; i++) {
       // ignore if the light barrier has not changed
       if ((newValue & LIGHT_BARRIERS[i]) == (oldValue & LIGHT_BARRIERS[i])) {
         continue;
       }
 
-      parcelTrackingIndex = i * 2 + newValue & LIGHT_BARRIERS[i] - 1;
+      parcelTrackingIndex = i * 2 + (newValue & LIGHT_BARRIERS[i]) - 1;
       rt_mbx_send(&mailbox_moveParcel, parcelTrackingIndex, sizeof(int));
     }
 
@@ -284,6 +283,7 @@ void fifo_readScannerData(int i) {
   addNewParcelToTrackingData(firstChar - '0');
 }
 
+RTIME timer, tstart;
 static __init int parallel_init(void) {
   rt_printk("Parcelsorter: Initializing");
 
@@ -308,14 +308,12 @@ static __init int parallel_init(void) {
   rt_typed_mbx_init(&mailbox_ejectParcel, MAILBOX_SIZE, FIFO_Q);
 
   // TODO: RTIME
-  RTIME timer;
   timer = nano2count(100 * 1000 * 1000);
 
   rt_set_periodic_mode();
   start_rt_timer(timer);
 
   // TODO: RTIME
-  RTIME tstart;
   tstart = rt_get_time() + nano2count(100 * 1000 * 1000);
 
   rt_task_make_periodic(&rttask_readAndUpdateLightBarriers, tstart, timer);
