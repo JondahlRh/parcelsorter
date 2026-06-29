@@ -33,10 +33,6 @@ SEM sem_internalRtaiBitmuster;
 int internalLightBarriersData = 0xFF;
 SEM sem_internalLightBarriersData;
 
-// scanner data
-int internalScannerData = -1;
-SEM sem_internalScannerData;
-
 // semaphores for triggering tasks
 SEM sem_triggerParcelMovement;
 SEM sem_triggerParcelEjection;
@@ -110,6 +106,17 @@ void toggle(int value) {
 }
 
 /**
+ * Function to add a new parcel to the parcel tracking data
+ */
+void addNewParcel(int ejectionIndex) {
+  rt_sem_wait(&sem_parcelTrackingData);
+
+  parcelTrackingData[0] = ejectionIndex;
+
+  rt_sem_signal(&sem_parcelTrackingData);
+}
+
+/**
  * Function to read the current state of the light barriers
  */
 inline int readLightBarriers(void) { return inb(RTAI_ADDRESS + 4); }
@@ -141,7 +148,20 @@ void task_ejectParcel(void) {}
 /**
  * Fifo: Read new Scanner Data and set the internal state
  */
-void fifo_readScannerData(void) {}
+void fifo_readScannerData(void) {
+  char buffer[FIFO_SIZE], firstChar;
+  int fifoReturnValue;
+
+  fifoReturnValue = rtf_get(FIFO_NUMBER, buffer, FIFO_SIZE);
+  if (fifoReturnValue == 0) return;
+
+  firstChar = buffer[1];
+  if (firstChar > '9' || firstChar < '0') {
+    firstChar = '0';
+  }
+
+  addNewParcel(firstChar - '0');
+}
 
 static __init int parallel_init(void) {
   rt_printk("Parcelsorter: Initializing");
@@ -163,7 +183,6 @@ static __init int parallel_init(void) {
   rt_typed_sem_init(&sem_internalRtaiBitmuster, 1, RES_SEM);
   rt_typed_sem_init(&sem_internalLightBarriersData, 1, RES_SEM);
   rt_typed_sem_init(&sem_parcelTrackingData, 1, RES_SEM);
-  rt_typed_sem_init(&sem_internalScannerData, 1, RES_SEM);
 
   // TODO: RTIME
 
@@ -192,7 +211,6 @@ static __exit void parallel_exit(void) {
   rt_typed_sem_destroy(&sem_internalRtaiBitmuster);
   rt_typed_sem_destroy(&sem_internalLightBarriersData);
   rt_typed_sem_destroy(&sem_parcelTrackingData);
-  rt_typed_sem_destroy(&sem_internalScannerData);
 
   rt_task_delete(&rttask_readLightBarriers);
   rt_task_delete(&rttask_moveParcel);
