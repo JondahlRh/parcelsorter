@@ -108,10 +108,16 @@ void toggle(int value) {
 /**
  * Function to add a new parcel to the parcel tracking data
  */
-void addNewParcel(int ejectionIndex) {
+void addNewParcel(int scannerValue) {
+  int ejectionId;
+
+  if (scannerValue == 1) ejectionId = 1;
+  if (scannerValue == 4) ejectionId = 2;
+  if (scannerValue == 9) ejectionId = 3;
+
   rt_sem_wait(&sem_parcelTrackingData);
 
-  parcelTrackingData[0] = ejectionIndex;
+  parcelTrackingData[0] = ejectionId;
 
   rt_sem_signal(&sem_parcelTrackingData);
 }
@@ -146,6 +152,7 @@ void task_readAndUpdateLightBarriers(void) {
 
     int i;
     for (i = 1; i < NUMBER_OF_LIGHT_BARRIERS; i++) {
+      // ignore if the light barrier has not changed
       if ((newData & LIGHT_BARRIERS[i]) == (oldData & LIGHT_BARRIERS[i])) {
         continue;
       }
