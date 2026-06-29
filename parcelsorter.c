@@ -145,10 +145,10 @@ void resetParcelTrackingDataAtIndex(int index) {
 bool isEjectionSaveAtIndex(int index) {
   int valueBefore, valueAfter;
 
-  rt_sem_wait(&semParcelTrackingData);
+  rt_sem_wait(&sem_parcelTrackingData);
   valueBefore = parcelTrackingData[index - 1];
   valueAfter = parcelTrackingData[index + 1];
-  rt_sem_signal(&semParcelTrackingData);
+  rt_sem_signal(&sem_parcelTrackingData);
 
   return valueBefore == 0 && valueAfter == 0;
 }
@@ -162,7 +162,7 @@ RT_TASK rttask_readAndUpdateLightBarriers;
 /**
  * Task: Reads the light barriers and updates the internal state
  */
-void task_readAndUpdateLightBarriers(void) {
+void task_readAndUpdateLightBarriers(long i) {
   int newValue, oldValue, parcelTrackingIndex;
   char buffer[9];
 
@@ -177,9 +177,9 @@ void task_readAndUpdateLightBarriers(void) {
     rt_sem_signal(&sem_internalLightBarriersData);
 
     // debugging
-    byteToString(buffer, newValue);
+    bitmaskToString(buffer, newValue);
     rt_printk("light barriers new:      %s", buffer);
-    byteToString(buffer, internalLightBarriersData);
+    bitmaskToString(buffer, internalLightBarriersData);
     rt_printk("light barriers internal: %s", buffer);
     intArrayToString(buffer, parcelTrackingData, NUMBER_OF_PARCEL_REGIONS);
     rt_printk("parcel tracking data:    %s", buffer);
@@ -219,11 +219,11 @@ RT_TASK rttask_moveParcel;
 /**
  * Task: Move parcel to the next region
  */
-void task_moveParcel(void) {
+void task_moveParcel(long i) {
   int parcelTrackingIndex, parcelEjectionId;
 
   while (true) {
-    rt_mbx_receive(&mailbox_moveParcel, &lightBarrierIndex, sizeof(int));
+    rt_mbx_receive(&mailbox_moveParcel, &parcelTrackingIndex, sizeof(int));
 
     rt_sem_wait(&sem_parcelTrackingData);
     parcelEjectionId = parcelTrackingData[parcelTrackingIndex];
@@ -244,7 +244,7 @@ RT_TASK rttask_ejectParcel;
 /**
  * Task: Eject a parcel if safe
  */
-void task_ejectParcel(void) {
+void task_ejectParcel(long i) {
   int parcelEjectionId;
 
   while (true) {
@@ -255,21 +255,21 @@ void task_ejectParcel(void) {
     // minimum sleep before ejecting can be safe
     rt_sleep(nano2count(100 * 1000 * 1000));  // TODO: RTIME
 
-    while (!isEjectionSaveAtIndex((index + 1) * 2)) {
+    while (!isEjectionSaveAtIndex((parcelEjectionId + 1) * 2)) {
       rt_sleep(nano2count(10 * 1000 * 1000));  // TODO: RTIME
       rt_task_wait_period();
     }
 
-    activate(EJECTORS[ejectionId - 1]);
+    activate(EJECTORS[parcelEjectionId - 1]);
     rt_sleep(nano2count(500 * 1000 * 1000));
-    deactivate(EJECTORS[ejectionId - 1]);
+    deactivate(EJECTORS[parcelEjectionId - 1]);
   }
 }
 
 /**
  * Fifo: Read new Scanner Data and set the internal state
  */
-void fifo_readScannerData(void) {
+void fifo_readScannerData(int i) {
   char buffer[FIFO_SIZE], firstChar;
   int fifoReturnValue;
 
