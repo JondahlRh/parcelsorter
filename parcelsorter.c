@@ -34,10 +34,6 @@ SEM sem_internalRtaiBitmuster;
 int internalLightBarriersData = 0xFF;
 SEM sem_internalLightBarriersData;
 
-// semaphores for triggering tasks
-SEM sem_triggerParcelMovement;
-SEM sem_triggerParcelEjection;
-
 // parcel tracking data
 #define NUMBER_OF_PARCEL_REGIONS 8
 int parcelTrackingData[NUMBER_OF_PARCEL_REGIONS];
@@ -202,7 +198,8 @@ void task_readAndUpdateLightBarriers(long i) {
 
     for (idx = 1; idx < NUMBER_OF_LIGHT_BARRIERS; idx++) {
       // ignore if the light barrier has not changed
-      if ((newValue & LIGHT_BARRIERS[idx]) == (oldValue & LIGHT_BARRIERS[idx])) {
+      if ((newValue & LIGHT_BARRIERS[idx]) ==
+          (oldValue & LIGHT_BARRIERS[idx])) {
         continue;
       }
 
@@ -247,8 +244,6 @@ void task_ejectParcel(long i) {
   int parcelEjectionId;
 
   while (true) {
-    rt_sem_wait(&sem_triggerParcelEjection);
-
     rt_mbx_receive(&mailbox_ejectParcel, &parcelEjectionId, sizeof(int));
 
     // minimum sleep before ejecting can be safe
