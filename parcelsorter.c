@@ -241,7 +241,8 @@ RT_TASK rttask_ejectParcel;
  * Task: Eject a parcel if safe
  */
 void task_ejectParcel(long i) {
-  int parcelEjectionId;
+  int parcelEjectionId, maximumWaitIndex;
+  bool isEjectionSave;
 
   while (true) {
     rt_mbx_receive(&mailbox_ejectParcel, &parcelEjectionId, sizeof(int));
@@ -249,10 +250,19 @@ void task_ejectParcel(long i) {
     // minimum sleep before ejecting can be safe
     rt_sleep(nano2count(100 * 1000 * 1000));  // TODO: RTIME
 
-    while (!isEjectionSaveAtIndex((parcelEjectionId + 1) * 2)) {
-      rt_sleep(nano2count(10 * 1000 * 1000));  // TODO: RTIME
-      rt_task_wait_period();
+    maximumWaitIndex = 200;
+    while (true) {
+      isEjectionSave = isEjectionSaveAtIndex((parcelEjectionId + 1) * 2);
+      if (!isEjectionSave) {
+        maximumWaitIndex--;
+        rt_sleep(nano2count(10 * 1000 * 1000));  // TODO: RTIME
+        continue;
+      }
+
+      break;
     }
+
+    if (!isEjectionSave) continue;
 
     activate(EJECTORS[parcelEjectionId - 1]);
     rt_sleep(nano2count(500 * 1000 * 1000));
