@@ -175,17 +175,27 @@ void task_readAndUpdateLightBarriers(void) {
       continue;
     };
 
+    if ((newValue & LIGHT_BARRIERS[0]) != (oldValue & LIGHT_BARRIERS[0])) {
+      if (newValue & LIGHT_BARRIERS[0] == 0) {
+        activate(BARCODE_SCANNER);
+        deactivate(BELTS[0]);
+      } else {
+        deactivate(BARCODE_SCANNER);
+        activate(BELTS[1]);
+      }
+    }
+
     int i;
     for (i = 1; i < NUMBER_OF_LIGHT_BARRIERS; i++) {
       // ignore if the light barrier has not changed
-      if ((newData & LIGHT_BARRIERS[i]) == (oldData & LIGHT_BARRIERS[i])) {
+      if ((newValue & LIGHT_BARRIERS[i]) == (oldValue & LIGHT_BARRIERS[i])) {
         continue;
       }
 
       // TODO: trigger task to move parcel with parcelTrackingIndex
 
       //! TMP
-      int parcelTrackingIndex = i * 2 + newData & LIGHT_BARRIERS[i] - 1;
+      int parcelTrackingIndex = i * 2 + newValue & LIGHT_BARRIERS[i] - 1;
     }
 
     rt_task_wait_period();
@@ -271,6 +281,7 @@ static __init int parallel_init(void) {
   rt_mount();
 
   setRtaiBitmuster(0x00);
+  activate(BELTS[0] + BELTS[1]);
 
   rt_task_init(&rttask_readAndUpdateLightBarriers,
                task_readAndUpdateLightBarriers, 0x00, 3000, 3, 0, 0);
