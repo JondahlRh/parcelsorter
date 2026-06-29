@@ -294,7 +294,7 @@ static __init int parallel_init(void) {
 
   rt_task_init(&rttask_readAndUpdateLightBarriers,
                task_readAndUpdateLightBarriers, 0x00, 3000, 3, 0, 0);
-  rt_task_init(&rttask_moveParcel, task_moveParcel, 0x00, 3000, 2 0, 0);
+  rt_task_init(&rttask_moveParcel, task_moveParcel, 0x00, 3000, 2, 0, 0);
   rt_task_init(&rttask_ejectParcel, task_ejectParcel, 0x00, 3000, 1, 0, 0);
 
   rtf_create(FIFO_NUMBER, FIFO_SIZE);
@@ -333,9 +333,9 @@ static __exit void parallel_exit(void) {
 
   rtf_destroy(FIFO_NUMBER);
 
-  rt_typed_sem_destroy(&sem_internalRtaiBitmuster);
-  rt_typed_sem_destroy(&sem_internalLightBarriersData);
-  rt_typed_sem_destroy(&sem_parcelTrackingData);
+  rt_sem_delete(&sem_internalRtaiBitmuster);
+  rt_sem_delete(&sem_internalLightBarriersData);
+  rt_sem_delete(&sem_parcelTrackingData);
 
   rt_mbx_delete(&mailbox_moveParcel);
   rt_mbx_delete(&mailbox_ejectParcel);
