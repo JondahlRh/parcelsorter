@@ -150,8 +150,8 @@ void task_readAndUpdateLightBarriers(void) {
         continue;
       }
 
-      // TODO: trigger task to move parcel and pass the index of the barrier
-      // TODO: that has changed
+      // TODO: trigger task to move parcel and pass the index and new value of
+      // TODO: the barrier that has changed
     }
 
     rt_task_wait_period();
@@ -162,7 +162,27 @@ RT_TASK rttask_moveParcel;
 /**
  * Task: Move parcel to the next region
  */
-void task_moveParcel(void) {}
+void task_moveParcel(void) {
+  int lightBarrierIndex, lightBarrierNewValue, parcelTrackingIndex;
+
+  while (true) {
+    rt_sem_wait(&sem_triggerParcelMovement);
+
+    // TODO: get index and new value of light barrier that has changed
+    lightBarrierIndex = 2;
+    lightBarrierNewValue = 1;
+
+    parcelTrackingIndex = lightBarrierIndex * 2 + lightBarrierNewValue;
+
+    rt_sem_wait(&sem_parcelTrackingData);
+    if ((parcelTrackingIndex + 1) < NUMBER_OF_PARCEL_REGIONS) {
+      parcelTrackingData[parcelTrackingIndex + 1] =
+          parcelTrackingData[parcelTrackingIndex];
+    }
+    parcelTrackingData[parcelTrackingIndex] = 0;
+    rt_sem_signal(&sem_parcelTrackingData);
+  }
+}
 
 RT_TASK rttask_checkParcelEjection;
 /**
