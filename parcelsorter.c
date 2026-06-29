@@ -219,7 +219,6 @@ void task_moveParcel(long i) {
   int parcelTrackingIndex, parcelEjectionId;
 
   while (true) {
-    rt_printk(".. task_moveParcel ..");
     rt_mbx_receive(&mailbox_moveParcel, &parcelTrackingIndex, sizeof(int));
 
     rt_sem_wait(&sem_parcelTrackingData);
@@ -245,7 +244,6 @@ void task_ejectParcel(long i) {
   int parcelEjectionId;
 
   while (true) {
-    rt_printk(".. task_ejectParcel ..");
     rt_mbx_receive(&mailbox_ejectParcel, &parcelEjectionId, sizeof(int));
 
     // minimum sleep before ejecting can be safe
@@ -266,8 +264,6 @@ void task_ejectParcel(long i) {
  * Fifo: Read new Scanner Data and set the internal state
  */
 void fifo_readScannerData(int i) {
-  rt_printk(".. fifo_readScannerData ..");
-
   char buffer[FIFO_SIZE], firstChar;
   int fifoReturnValue;
 
