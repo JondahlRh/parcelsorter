@@ -263,12 +263,12 @@ void task_ejectParcel(long i) {
 /**
  * Fifo: Read new Scanner Data and set the internal state
  */
-void fifo_readScannerData(int i) {
+int fifo_readScannerData(int i) {
   char buffer[FIFO_SIZE], firstChar;
   int fifoReturnValue;
 
   fifoReturnValue = rtf_get(FIFO_NUMBER, buffer, FIFO_SIZE);
-  if (fifoReturnValue == 0) return;
+  if (fifoReturnValue == 0) return 0;
 
   firstChar = buffer[1];
   if (firstChar > '9' || firstChar < '0') {
