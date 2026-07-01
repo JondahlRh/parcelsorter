@@ -351,7 +351,7 @@ static __init int parallel_init(void) {
   start_rt_timer(t_baseTimer);
 
   t_startLightBarrierTask = rt_get_time() + nano2count(500 * 1000 * 1000);
-  t_timerLightBarrierTask = nano2count(500 * 1000 * 1000);
+  t_timerLightBarrierTask = nano2count(200 * 1000 * 1000);  //! remove
 
   rt_task_make_periodic(&rttask_readAndUpdateLightBarriers,
                         t_startLightBarrierTask, t_timerLightBarrierTask);
