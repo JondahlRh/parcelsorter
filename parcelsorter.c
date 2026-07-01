@@ -175,7 +175,7 @@ RT_TASK rttask_readAndUpdateLightBarriers;
  */
 void task_readAndUpdateLightBarriers(long i) {
   int newValue, oldValue, parcelTrackingIndex, idx;
-  char buffer[9];
+  char buffer[9];  //! reemove
 
   while (true) {
     // read light barriers und update internal state
@@ -183,10 +183,10 @@ void task_readAndUpdateLightBarriers(long i) {
     newValue = readLightBarriers();
 
     // debugging
-    intArrayToString(buffer, parcelTrackingData, 8);
-    rt_printk("Light barriers: %s", buffer);
-    bitmaskToString(buffer, internalLightBarriersData);
-    rt_printk("Light barriers: %s", buffer);
+    intArrayToString(buffer, parcelTrackingData, 8);     //! reemove
+    rt_printk("Light barriers: %s", buffer);             //! reemove
+    bitmaskToString(buffer, internalLightBarriersData);  //! reemove
+    rt_printk("Light barriers: %s", buffer);             //! reemove
 
     rt_sem_wait(&sem_internalLightBarriersData);
     oldValue = internalLightBarriersData;
