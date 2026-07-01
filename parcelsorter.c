@@ -365,8 +365,6 @@ static __init int parallel_init(void) {
   return 0;
 }
 static __exit void parallel_exit(void) {
-  rt_printk("Parcelsorter: Exiting");
-
   stop_rt_timer();
 
   setRtaiBitmuster(0x00);
@@ -385,6 +383,8 @@ static __exit void parallel_exit(void) {
   rt_task_delete(&rttask_ejectParcel);
 
   rt_umount();
+
+  rt_printk("Parcelsorter: Exiting");
 }
 
 module_init(parallel_init);
