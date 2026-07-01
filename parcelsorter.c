@@ -265,8 +265,8 @@ void task_ejectParcel(long i) {
     rt_sleep(nano2count(200 * 1000 * 1000));
 
     // check if ejection is safe
-    // maximum wait time is 1.1 seconds, after that ejection will be ignored
-    maximumWaitIndex = 11;
+    // maximum wait time is 1 second, after that ejection will be ignored
+    maximumWaitIndex = 10;
     while (maximumWaitIndex > 0) {
       isEjectionSave = isEjectionSaveAtIndex(parcelEjectionId * 2);
       if (isEjectionSave) break;
