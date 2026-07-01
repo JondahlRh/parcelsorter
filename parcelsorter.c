@@ -222,10 +222,6 @@ void task_readAndUpdateLightBarriers(long i) {
       // trigger move parcel task
       parcelTrackingIndex =
           idx * 2 + ((newValue & LIGHT_BARRIERS[idx]) ? 1 : 0) - 2;
-      rt_printk(
-          "Light parcelTrackingIndex [%d] = idx [%d] * 2 + (newValue [%d] & "
-          "LIGHT_BARRIERS[idx] [%d]) - 2;",
-          parcelTrackingIndex, idx, newValue, LIGHT_BARRIERS[idx]);  //! reemove
       rt_mbx_send(&mailbox_moveParcel, &parcelTrackingIndex, sizeof(int));
     }
 
@@ -319,6 +315,8 @@ int fifo_readScannerData(int i) {
 
 RTIME t_baseTimer, t_startLightBarrierTask, t_timerLightBarrierTask;
 static __init int parallel_init(void) {
+  rt_printk("Parcelsorter: Initializing");
+
   rt_mount();
 
   setRtaiBitmuster(0x00);
@@ -361,12 +359,17 @@ static __init int parallel_init(void) {
   rt_task_resume(&rttask_moveParcel);
   rt_task_resume(&rttask_ejectParcel);
 
-  rt_printk("Parcelsorter: Initializing");
   return 0;
 }
 
 static __exit void parallel_exit(void) {
+  rt_printk("Parcelsorter: Exiting");
+
   stop_rt_timer();
+
+  rt_task_delete(&rttask_readAndUpdateLightBarriers);
+  rt_task_delete(&rttask_moveParcel);
+  rt_task_delete(&rttask_ejectParcel);
 
   setRtaiBitmuster(0x00);
 
@@ -379,13 +382,7 @@ static __exit void parallel_exit(void) {
   rt_mbx_delete(&mailbox_moveParcel);
   rt_mbx_delete(&mailbox_ejectParcel);
 
-  rt_task_delete(&rttask_readAndUpdateLightBarriers);
-  rt_task_delete(&rttask_moveParcel);
-  rt_task_delete(&rttask_ejectParcel);
-
   rt_umount();
-
-  rt_printk("Parcelsorter: Exiting");
 }
 
 module_init(parallel_init);
