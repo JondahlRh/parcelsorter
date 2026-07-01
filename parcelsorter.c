@@ -306,7 +306,7 @@ int fifo_readScannerData(int i) {
   return 0;
 }
 
-RTIMRE t_baseTimer, t_startLightBarrierTask, t_timerLightBarrierTask;
+RTIME t_baseTimer, t_startLightBarrierTask, t_timerLightBarrierTask;
 static __init int parallel_init(void) {
   rt_printk("Parcelsorter: Initializing");
 
