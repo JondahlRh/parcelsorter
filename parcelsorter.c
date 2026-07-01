@@ -318,15 +318,15 @@ static __init int parallel_init(void) {
   rt_task_init(
       &rttask_readAndUpdateLightBarriers, task_readAndUpdateLightBarriers, 0,
       RT_STACK_SIZE,
-      HIGH_PRIORITY,  // highest priority to check for light barrier changes
+      RT_HIGH_PRIORITY,  // highest priority to check for light barrier changes
       0, 0);
   rt_task_init(
       &rttask_moveParcel, task_moveParcel, 0, RT_STACK_SIZE,
-      MEDIUM_PRIORITY,  // medium priority to move parcels in internal state
+      RT_MEDIUM_PRIORITY,  // medium priority to move parcels in internal state
       0, 0);
   rt_task_init(
       &rttask_ejectParcel, task_ejectParcel, 0, RT_STACK_SIZE,
-      LOW_PRIORITY,  // lowest  priority to eject parcels from the belts
+      RT_LOW_PRIORITY,  // lowest  priority to eject parcels from the belts
       0, 0);
 
   rtf_create(FIFO_NUMBER, FIFO_SIZE);
