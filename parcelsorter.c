@@ -8,7 +8,7 @@
 #include <rtai_sem.h>
 
 // base definitions
-#define RT_STACK_SIZE 4096
+#define RT_STACK_SIZE 1024
 #define RT_HIGH_PRIORITY 0
 #define RT_MEDIUM_PRIORITY 1
 #define RT_LOW_PRIORITY 2
@@ -46,7 +46,7 @@ int parcelTrackingData[NUMBER_OF_PARCEL_REGIONS];
 SEM sem_parcelTrackingData;
 
 // mailboxes
-#define MAILBOX_SIZE 1024
+#define MAILBOX_SIZE 40
 MBX mailbox_moveParcel;
 MBX mailbox_ejectParcel;
 
