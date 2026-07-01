@@ -267,6 +267,7 @@ void task_ejectParcel(long i) {
 
   while (true) {
     rt_mbx_receive(&mailbox_ejectParcel, &parcelEjectionId, sizeof(int));
+    rt_printk("parcelEjectionId : %d", parcelEjectionId);  //! reemove
 
     // minimum sleep before ejecting can be safe
     rt_sleep(nano2count(200 * 1000 * 1000));
@@ -276,6 +277,8 @@ void task_ejectParcel(long i) {
     maximumWaitIndex = 11;
     while (maximumWaitIndex > 0) {
       isEjectionSave = isEjectionSaveAtIndex((parcelEjectionId + 1) * 2);
+      rt_printk("isEjectionSave   : %d - maximumWaitIndex: %d", isEjectionSave,
+                maximumWaitIndex);  //! reemove
       if (isEjectionSave) break;
 
       maximumWaitIndex--;
