@@ -202,10 +202,12 @@ void task_readAndUpdateLightBarriers(long i) {
     if ((newValue & LIGHT_BARRIERS[0]) != (oldValue & LIGHT_BARRIERS[0])) {
       if ((newValue & LIGHT_BARRIERS[0]) == 0) {
         // parcel entered first light barrier
-        toggle(BARCODE_SCANNER + BELTS[1]);
+        activate(BARCODE_SCANNER);
+        deactivate(BELTS[0]);
       } else {
         // parcel left first light barrier
-        toggle(BARCODE_SCANNER + BELTS[1]);
+        deactivate(BARCODE_SCANNER);
+        activate(BELTS[0]);
       }
     }
 
