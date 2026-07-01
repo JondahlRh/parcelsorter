@@ -184,9 +184,9 @@ void task_readAndUpdateLightBarriers(long i) {
 
     // debugging
     intArrayToString(buffer, parcelTrackingData, 8);     //! reemove
-    rt_printk("Light barriers: %s", buffer);             //! reemove
+    rt_printk("parcelTrackingData : %s", buffer);        //! reemove
     bitmaskToString(buffer, internalLightBarriersData);  //! reemove
-    rt_printk("Light barriers: %s", buffer);             //! reemove
+    rt_printk("Light barriers     : %s", buffer);        //! reemove
 
     rt_sem_wait(&sem_internalLightBarriersData);
     oldValue = internalLightBarriersData;
@@ -221,6 +221,10 @@ void task_readAndUpdateLightBarriers(long i) {
 
       // trigger move parcel task
       parcelTrackingIndex = idx * 2 + (newValue & LIGHT_BARRIERS[idx]) - 2;
+      rt_printk(
+          "Light parcelTrackingIndex [%d] = idx [%d] * 2 + (newValue [%d] & "
+          "LIGHT_BARRIERS[idx] [%d]) - 2;",
+          parcelTrackingIndex, idx, newValue, LIGHT_BARRIERS[idx]);  //! reemove
       rt_mbx_send(&mailbox_moveParcel, &parcelTrackingIndex, sizeof(int));
     }
 
