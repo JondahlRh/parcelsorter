@@ -186,7 +186,7 @@ void task_readAndUpdateLightBarriers(long i) {
     intArrayToString(buffer, parcelTrackingData, 8);
     rt_printk("Light barriers: %s", buffer);
     bitmaskToString(buffer, internalLightBarriersData);
-    rt_printk("Light barriers: %d", buffer);
+    rt_printk("Light barriers: %s", buffer);
 
     rt_sem_wait(&sem_internalLightBarriersData);
     oldValue = internalLightBarriersData;
