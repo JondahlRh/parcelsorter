@@ -355,12 +355,8 @@ static __init int parallel_init(void) {
 
   rt_task_make_periodic(&rttask_readAndUpdateLightBarriers,
                         t_startLightBarrierTask, t_timerLightBarrierTask);
-  // rt_task_resume(&rttask_moveParcel);
-  rt_task_make_periodic(&rttask_moveParcel, t_startLightBarrierTask,
-                        t_timerLightBarrierTask);
-  // rt_task_resume(&rttask_ejectParcel);
-  rt_task_make_periodic(&rttask_ejectParcel, t_startLightBarrierTask,
-                        t_timerLightBarrierTask);
+  rt_task_resume(&rttask_moveParcel);
+  rt_task_resume(&rttask_ejectParcel);
 
   return 0;
 }
