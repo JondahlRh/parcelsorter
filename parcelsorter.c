@@ -175,18 +175,11 @@ RT_TASK rttask_readAndUpdateLightBarriers;
  */
 void task_readAndUpdateLightBarriers(long i) {
   int newValue, oldValue, parcelTrackingIndex, idx;
-  char buffer[9];  //! reemove
 
   while (true) {
     // read light barriers und update internal state
     // when nothing has changed, wait and continue
     newValue = readLightBarriers();
-
-    // debugging
-    intArrayToString(buffer, parcelTrackingData, 8);     //! reemove
-    rt_printk("parcelTrackingData : %s", buffer);        //! reemove
-    bitmaskToString(buffer, internalLightBarriersData);  //! reemove
-    rt_printk("Light barriers     : %s", buffer);        //! reemove
 
     rt_sem_wait(&sem_internalLightBarriersData);
     oldValue = internalLightBarriersData;
@@ -267,7 +260,6 @@ void task_ejectParcel(long i) {
 
   while (true) {
     rt_mbx_receive(&mailbox_ejectParcel, &parcelEjectionId, sizeof(int));
-    rt_printk("parcelEjectionId : %d", parcelEjectionId);  //! reemove
 
     // minimum sleep before ejecting can be safe
     rt_sleep(nano2count(200 * 1000 * 1000));
@@ -277,8 +269,6 @@ void task_ejectParcel(long i) {
     maximumWaitIndex = 11;
     while (maximumWaitIndex > 0) {
       isEjectionSave = isEjectionSaveAtIndex(parcelEjectionId * 2);
-      rt_printk("isEjectionSave   : %d - maximumWaitIndex: %d", isEjectionSave,
-                maximumWaitIndex);  //! reemove
       if (isEjectionSave) break;
 
       maximumWaitIndex--;
@@ -355,7 +345,7 @@ static __init int parallel_init(void) {
   start_rt_timer(t_baseTimer);
 
   t_startLightBarrierTask = rt_get_time() + nano2count(500 * 1000 * 1000);
-  t_timerLightBarrierTask = nano2count(200 * 1000 * 1000);  //! remove
+  t_timerLightBarrierTask = nano2count(500 * 1000 * 1000);
 
   rt_task_make_periodic(&rttask_readAndUpdateLightBarriers,
                         t_startLightBarrierTask, t_timerLightBarrierTask);
