@@ -249,8 +249,8 @@ void task_moveParcel(long i) {
     rt_sem_signal(&sem_parcelTrackingData);
 
     // check if parcel is at a ejection region and it matches the parcel data
-    if (parcelTrackingIndex % 2 == 0 &&
-        parcelEjectionId == parcelTrackingIndex / 2) {
+    if ((parcelTrackingIndex + 1) % 2 == 0 &&
+        parcelEjectionId == (parcelTrackingIndex + 1) / 2) {
       // trigger eject parcel task
       rt_mbx_send(&mailbox_ejectParcel, &parcelEjectionId, sizeof(int));
     }
