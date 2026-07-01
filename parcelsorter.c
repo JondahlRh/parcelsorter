@@ -182,6 +182,12 @@ void task_readAndUpdateLightBarriers(long i) {
     // when nothing has changed, wait and continue
     newValue = readLightBarriers();
 
+    // debugging
+    intArrayToString(buffer, &parcelTrackingData, 8);
+    rt_printk("Light barriers: %s", buffer);
+    bitmaskToString(buffer, internalLightBarriersData);
+    rt_printk("Light barriers: %d", buffer);
+
     rt_sem_wait(&sem_internalLightBarriersData);
     oldValue = internalLightBarriersData;
     internalLightBarriersData = newValue;
