@@ -183,7 +183,7 @@ void task_readAndUpdateLightBarriers(long i) {
     newValue = readLightBarriers();
 
     // debugging
-    intArrayToString(buffer, &parcelTrackingData, 8);
+    intArrayToString(buffer, parcelTrackingData, 8);
     rt_printk("Light barriers: %s", buffer);
     bitmaskToString(buffer, internalLightBarriersData);
     rt_printk("Light barriers: %d", buffer);
