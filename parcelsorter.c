@@ -220,7 +220,8 @@ void task_readAndUpdateLightBarriers(long i) {
       }
 
       // trigger move parcel task
-      parcelTrackingIndex = idx * 2 + (newValue & LIGHT_BARRIERS[idx]) - 2;
+      parcelTrackingIndex =
+          idx * 2 + ((newValue & LIGHT_BARRIERS[idx]) ? 1 : 0) - 2;
       rt_printk(
           "Light parcelTrackingIndex [%d] = idx [%d] * 2 + (newValue [%d] & "
           "LIGHT_BARRIERS[idx] [%d]) - 2;",
