@@ -276,7 +276,7 @@ void task_ejectParcel(long i) {
     // maximum wait time is 1.1 seconds, after that ejection will be ignored
     maximumWaitIndex = 11;
     while (maximumWaitIndex > 0) {
-      isEjectionSave = isEjectionSaveAtIndex((parcelEjectionId + 1) * 2);
+      isEjectionSave = isEjectionSaveAtIndex(parcelEjectionId * 2);
       rt_printk("isEjectionSave   : %d - maximumWaitIndex: %d", isEjectionSave,
                 maximumWaitIndex);  //! reemove
       if (isEjectionSave) break;
